@@ -3,7 +3,8 @@ const sample = `.class
     &::hover
       color red
 
-@import "something";
+@import "something"
+@import (importRule) "something"
 
 // Comment
 @link-color #428bca // a nice purple
@@ -109,7 +110,12 @@ function Parse (input) {
     // console.log(lineNum, indent)
   }
 
-  console.log(parsedLines.join('\n'))
+
+  const l = (parsedLines.length + '').split('').length
+  parsedLines.forEach((x, i) => {
+    const n = `${padStart((i + 1 + ''), ' ', l)} | `
+    console.log(n + x)
+  })
 
   //
   function isMultiSelector (line) {
@@ -121,21 +127,21 @@ function Parse (input) {
   }
 
   function writeUnchanged (line, lineNum) {
-    parsedLines.push(`${line} // [${lineNum}]`)
+    parsedLines.push(line)
   }
 
   function writeDeclaration (line, lineNum) {
-    parsedLines.push(`${line}; // [${lineNum}]`)
+    parsedLines.push(`${line};`)
   }
 
   function writeDeclarationAndStatmentEnd (line, lineNum, currIndent, nextIndent) {
     const rep = (currIndent - nextIndent) / NUM_INDENT_SPACES
     const brackets = '}'.repeat(rep)
-    parsedLines.push(`${line}; ${brackets} // [${lineNum}]`)
+    parsedLines.push(`${line}; ${brackets}`)
   }
 
   function writeStatementStart (line, lineNum) {
-    parsedLines.push(`${line} { // [${lineNum}]`)
+    parsedLines.push(`${line} {`)
   }
 
   function getLine (lineNum) {
