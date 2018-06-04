@@ -8,11 +8,13 @@ const sample = `.class
 
 // Comment
 @link-color #428bca // a nice purple
+@link-color red // or a red // if purp not your thang
 @my-selector link
 
 .classname
   property value
   font-size 8, 2, 4
+  // ^ this ain't valid
 
   &__el
     content "element"
@@ -101,7 +103,6 @@ function Parse (input) {
       writeDeclarationAndStatmentEnd(curr, lineNum, currIndent, nextIndent)
     } else if (nextIndent > currIndent) {
       // curr has children
-      // indent = currIndent / NUM_INDENT_SPACES
       writeStatementStart(curr, lineNum)
     }
     else {
@@ -113,7 +114,8 @@ function Parse (input) {
 
   const l = (parsedLines.length + '').split('').length
   parsedLines.forEach((x, i) => {
-    const n = `${padStart((i + 1 + ''), ' ', l)} | `
+    let n = `${padStart((i + 1 + ''), ' ', l)} | `
+    n = ''
     console.log(n + x)
   })
 
@@ -131,17 +133,49 @@ function Parse (input) {
   }
 
   function writeDeclaration (line, lineNum) {
-    parsedLines.push(`${line};`)
+    parsedLines.push(parseDeclaration(line))
   }
 
   function writeDeclarationAndStatmentEnd (line, lineNum, currIndent, nextIndent) {
     const rep = (currIndent - nextIndent) / NUM_INDENT_SPACES
     const brackets = '}'.repeat(rep)
-    parsedLines.push(`${line}; ${brackets}`)
+    parsedLines.push(parseDeclaration(line) + ' ' + brackets)
   }
 
   function writeStatementStart (line, lineNum) {
     parsedLines.push(`${line} {`)
+  }
+
+  function parseDeclaration (line) {
+    const _line = line.trim()
+
+    // Comments
+    if (_line.startsWith('//')) {
+      return line
+    }
+    if (_line.startsWith('@import')) {
+      return line + ';'
+    }
+    if (_line.startsWith('@plugin')) {
+      return line + ';'
+    }
+
+    const [decl, comment] = splitOnce(_line, '//')
+    const [prop, val] = splitOnce(decl, ' ')
+    const indentSpaces = ' '.repeat(indentation(line))
+    const commentStr = comment ? ' //' + comment : ''
+
+    if (prop && val) {
+      return indentSpaces +
+        prop + ': ' +
+        val.trim() + ';' +
+        commentStr
+    }
+    else {
+      return indentSpaces +
+        decl + ';' +
+        commentStr
+    }
   }
 
   function getLine (lineNum) {
@@ -182,6 +216,11 @@ function Parse (input) {
 
 
 // Util
+
+function splitOnce (str, sep = '') {
+  const [first, ...rest] = str.split(sep)
+  return [first, rest.join(sep)]
+}
 
 function padStart (str, padString, length) {
   while (str.length < length)
