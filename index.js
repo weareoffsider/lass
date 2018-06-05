@@ -49,7 +49,45 @@ h2
   &::after
     content ''
 
+
+// Problem A.1
+.test()
+  abc 123
+
+.mixin(@color; @margin: 2)
+  color-3 @color
+  margin @margin
+
+.some .selector div
+  .mixin(#008000)
+
+  // Problem A.2 / .from(768)
+  +from(768)
+    color red
+  // ^ .from(768, { color: red }) note end '})'
+
+.from(@px, @rules)
+  @media screen and (min-width: @px)
+    @rules()
 `
+
+const next = `
+.animation
+  transition (
+    opacity 1s,
+    color 1s
+  )
+
+  // or, where the parse knows which properties are space and comma separated
+  transition
+    opacity 1s
+    color 1s
+
+  transform
+    rotate(90deg)
+    translateY(-50%)
+`
+
 
 /*
 Terms
@@ -143,7 +181,32 @@ function Parse (input) {
   }
 
   function writeStatementStart (line, lineNum) {
-    parsedLines.push(`${line} {`)
+    /*
+      Special case for mixins that take rules
+      +from(768)     |    .from(768, {
+        color red    |      color: red;
+                     |    })
+    */
+    if (line.trim().startsWith('+')) {
+      let [statement, comment] = splitOnce(line, '//')
+      // remove starting '+' and trailing '('
+      // @TODO handle #mixins (they don't hae to be just . classes)
+      statement = statement.trim().replace('+', '.')
+      statement = statement.trim().slice(0, -1)
+
+      parsedLines.push(
+        statement + ', {' +
+        (comment ? ' //' + comment : '')
+      )
+      console.log(`Line ${lineNum} opens a statement that has a nested @rules block.
+        This needs to be closed with a '})' so we'll have to start tracking indents.
+        Perhaps as
+          const indent = ['}', '})', '}']
+      `)
+    }
+    else {
+      parsedLines.push(line + '{')
+    }
   }
 
   function parseDeclaration (line) {
