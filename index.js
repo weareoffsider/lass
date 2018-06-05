@@ -64,6 +64,7 @@ h2
   // Problem A.2 / .from(768)
   +from(768)
     color red
+
   // ^ .from(768, { color: red }) note end '})'
 
 .from(@px, @rules)
@@ -107,6 +108,7 @@ function Parse (input) {
   const parsedLines = []
   const lines = input.split("\n")
   let lineNum = 1
+  let indentStack = []
 
   for (; lineNum <= lines.length; lineNum++) {
     const curr = currLine()
@@ -141,7 +143,7 @@ function Parse (input) {
       writeDeclarationAndStatmentEnd(curr, lineNum, currIndent, nextIndent)
     } else if (nextIndent > currIndent) {
       // curr has children
-      writeStatementStart(curr, lineNum)
+      writeStatementStart(curr, lineNum, currIndent)
     }
     else {
       console.log(`Condition not met for ${lineNum}`)
@@ -175,12 +177,16 @@ function Parse (input) {
   }
 
   function writeDeclarationAndStatmentEnd (line, lineNum, currIndent, nextIndent) {
-    const rep = (currIndent - nextIndent) / NUM_INDENT_SPACES
-    const brackets = '}'.repeat(rep)
-    parsedLines.push(parseDeclaration(line) + ' ' + brackets)
+    const depth = (currIndent - nextIndent) / NUM_INDENT_SPACES
+    const closing = []
+    for (let i = 0; i < depth; i++) {
+      closing.push(indentStack.pop().symbol)
+    }
+
+    parsedLines.push(parseDeclaration(line) + ' ' + closing.join(''))
   }
 
-  function writeStatementStart (line, lineNum) {
+  function writeStatementStart (line, lineNum, currIndent) {
     /*
       Special case for mixins that take rules
       +from(768)     |    .from(768, {
@@ -194,18 +200,27 @@ function Parse (input) {
       statement = statement.trim().replace('+', '.')
       statement = statement.trim().slice(0, -1)
 
+      const indentSpaces = ' '.repeat(indentation(line))
+
       parsedLines.push(
+        indentSpaces +
         statement + ', {' +
         (comment ? ' //' + comment : '')
       )
-      console.log(`Line ${lineNum} opens a statement that has a nested @rules block.
-        This needs to be closed with a '})' so we'll have to start tracking indents.
-        Perhaps as
-          const indent = ['}', '})', '}']
-      `)
+
+      indentStack.push({
+        lineNum,
+        depth: currIndent / NUM_INDENT_SPACES,
+        symbol: '});'
+      })
     }
     else {
       parsedLines.push(line + '{')
+      indentStack.push({
+        lineNum,
+        depth: currIndent / NUM_INDENT_SPACES,
+        symbol: '}'
+      })
     }
   }
 
