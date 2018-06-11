@@ -65,6 +65,9 @@ h2
   +from(768)
     color red
 
+    &:hover
+      color blue
+
   // ^ .from(768, { color: red }) note end '})'
 
 .from(@px, @rules)
@@ -80,15 +83,32 @@ const next = `
   )
 
   // or, where the parse knows which properties are space and comma separated
-  transition
+  transition[,]
     opacity 1s
     color 1s
 
-  transform
+  background[ ]
+    no-repeat
+    url()
+    center
+    cover
+
+  transform[ ]
     rotate(90deg)
     translateY(-50%)
 `
 
+const objs = `
+
+@object: {
+  foo: 1
+  bar: 2
+}
+
+// into
+@object______foo: 1;
+@object______bar: 1;
+`
 
 /*
 Terms
@@ -112,7 +132,7 @@ function Parse (input) {
 
   for (; lineNum <= lines.length; lineNum++) {
     const curr = currLine()
-    const next = getNextLineNotEmpty(lineNum)
+    const next = getNextMeaningfulLine(lineNum)
 
     // if (lineNum === 20) {
     //   console.log(curr)
@@ -126,6 +146,9 @@ function Parse (input) {
 
     if (isEmptyLine(curr)) {
       writeEmpty(curr, lineNum)
+    }
+    else if (isCommentLine(curr)) {
+      writeUnchanged(curr, lineNum)
     }
     else if (! next) {
       writeDeclarationAndStatmentEnd(curr, lineNum, currIndent, 0)
@@ -155,7 +178,7 @@ function Parse (input) {
   const l = (parsedLines.length + '').split('').length
   parsedLines.forEach((x, i) => {
     let n = `${padStart((i + 1 + ''), ' ', l)} | `
-    n = ''
+    // n = ''
     console.log(n + x)
   })
 
@@ -268,19 +291,23 @@ function Parse (input) {
     return curr
   }
 
-  function getNextLineNotEmpty (lineNum, iterated = false) {
+  function getNextMeaningfulLine (lineNum, iterated = false) {
     let nextLine = getLine(lineNum + 1)
     if (nextLine === undefined)
       return null
 
-    if (isEmptyLine(nextLine))
-      return getNextLineNotEmpty(lineNum + 1, true)
+    if (isEmptyLine(nextLine) || isCommentLine(nextLine))
+      return getNextMeaningfulLine(lineNum + 1, true)
 
     return nextLine
   }
 
   function isEmptyLine (line) {
     return line.trim().length === 0
+  }
+
+  function isCommentLine (line) {
+    return line.trim().startsWith('//')
   }
 
   function indentation (line) {
