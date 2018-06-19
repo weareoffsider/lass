@@ -1,0 +1,22 @@
+{
+  "name": "lass",
+  "version": "1.0.0",
+  "description": "Lass",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/weareoffsider/lass.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/weareoffsider/lass/issues"
+  },
+  "homepage": "https://github.com/weareoffsider/lass#readme",
+  "devDependencies": {
+    "jest": "23.1.0"
+  }
+}

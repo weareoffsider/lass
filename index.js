@@ -179,8 +179,10 @@ function Parse (input) {
   parsedLines.forEach((x, i) => {
     let n = `${padStart((i + 1 + ''), ' ', l)} | `
     // n = ''
-    console.log(n + x)
+    // console.log(n + x)
   })
+
+  return parsedLines.join('\n')
 
   //
   function isMultiSelector (line) {
@@ -332,3 +334,7 @@ function padStart (str, padString, length) {
     str = padString + str
   return str
 }
+
+
+// export default Parse
+module.exports = Parse
