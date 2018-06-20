@@ -142,7 +142,7 @@ h2 {
   .from(768, {
     color: red;
 
-    &:hover{
+    &:hover {
       color: blue; }});}
 
   // ^ .from(768, { color: red }) note end '})'

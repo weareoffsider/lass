@@ -203,8 +203,21 @@ function Lass (input = '') {
           if (next.indent !== curr.indent + 1) {
             console.error(`Indentation error for line ${next.lineNum}`)
           }
-          pushIndentStack(curr.lineNum, curr.indent, '}')
-          curr.openingSymbol = '{'
+
+          if (curr.content.startsWith('+')) {
+            // remove starting '+' and trailing ')'
+            // @TODO handle #mixins (they don't hae to be just . classes)
+            curr.content = curr.content.replace('+', '.')
+            curr.content = curr.content.slice(0, -1) + ',' // remove trailing ')'
+            pushIndentStack(curr.lineNum, curr.indent, '});')
+            curr.openingSymbol = '{'
+          }
+          else {
+            pushIndentStack(curr.lineNum, curr.indent, '}')
+            curr.openingSymbol = '{'
+          }
+          // pushIndentStack(curr.lineNum, curr.indent, '}')
+          // curr.openingSymbol = '{'
           return writeLine(curr)
         }
         else {
