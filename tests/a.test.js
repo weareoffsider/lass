@@ -1,7 +1,7 @@
-const lass = require('../index')
+const Lass = require('../index')
 
 test('Lots, while refactoring parser', () => {
-  expect(lass(
+  expect(Lass(
 `.class
   &__something
     &::hover
@@ -22,10 +22,8 @@ test('Lots, while refactoring parser', () => {
 
   &__el
     content "element"
-
     &::hover
       text-decoration underline
-
     color red
 
 h1
@@ -79,9 +77,9 @@ h2
     @rules()
 `
 )).toBe(
-`.class{
-  &__something{
-    &::hover{
+`.class {
+  &__something {
+    &::hover {
       color: red; }}}
 
 @import "something";
@@ -92,54 +90,52 @@ h2
 @link-color: red; // or a red // if purp not your thang
 @my-selector: link;
 
-.classname{
+.classname {
   property: value;
   font-size: 8, 2, 4;
   // ^ this ain't valid
 
-  &__el{
+  &__el {
     content: "element";
-
-    &::hover{
+    &::hover {
       text-decoration: underline; }
-
     color: red; }}
 
-h1{
+h1 {
   font-weight: bold; }
 
-h1, h2{
+h1, h2 {
   font-size: big; }
 
 h1,
-h2{
+h2 {
   font-size: big; }
 
-[disabled]{
+[disabled] {
   opacity: 0.5; }
 
 // Usage
-.@{my-selector}{
+.@{my-selector} {
   font-weight: bold;
   color: @link-color;
   line-height: 40px; }
 
-#id{
+#id {
   for: you and me; // for: you and me <-- like that
 
-  &::after{
+  &::after {
     content: ''; }}
 
 
 // Problem A.1
-.test(){
+.test() {
   abc: 123; }
 
-.mixin(@color; @margin: 2){
+.mixin(@color; @margin: 2) {
   color-3: @color;
   margin: @margin; }
 
-.some .selector div{
+.some .selector div {
   .mixin(#008000);
 
   // Problem A.2 / .from(768)
@@ -151,8 +147,8 @@ h2{
 
   // ^ .from(768, { color: red }) note end '})'
 
-.from(@px, @rules){
-  @media screen and (min-width: @px){
+.from(@px, @rules) {
+  @media screen and (min-width: @px) {
     @rules(); }}
 `
 );
