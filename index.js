@@ -172,9 +172,12 @@ function Lass (input = '') {
       }
       else {
         const next = getNextMeaningful(lineObjs, i)
-        if (! next) {
+        if (! next || next.indent < curr.indent) {
+          // Curr is last in tip of branch
           // Case for the very last line
-          curr.closingSymbol = popIndentStack(curr.indent, curr.lineNum)
+          curr.closingSymbol = ! next
+            ? popIndentStack(curr.indent)
+            : popIndentStack(curr.indent - next.indent)
 
           if (multiLineExpression) {
             multiLineExpression = false
@@ -202,20 +205,6 @@ function Lass (input = '') {
             curr.content = parseDeclaration(curr.content)
             return writeLine(curr)
           }
-        }
-        else if (next.indent < curr.indent) {
-          // Curr is last in tip of branch
-          curr.closingSymbol = popIndentStack(curr.indent - next.indent)
-
-          if (multiLineExpression) {
-            multiLineExpression = false
-            curr.content = curr.content + ';'
-          } else {
-            // Only parse if we know it's not part of a multiLineExpression
-            curr.content = parseDeclaration(curr.content)
-          }
-
-          return writeLine(curr)
         }
         else if (next.indent > curr.indent) {
           // Children follow
