@@ -123,6 +123,8 @@ nested statements
 Lass(sample)
 function Lass (input = '') {
   const NUM_INDENT_SPACES = 2
+  const SPACE_CHAR = ' '
+  const COMMA_CHAR = ','
 
   const lines = input.split('\n')
   const linesLength = lines.length
@@ -146,14 +148,11 @@ function Lass (input = '') {
     // console.log(lineNum, indent, content, comment)
 
     lineObjs.push({
-      // is,
       meaningful: content ? true : false,
       lineNum,
       indent,
       content,
       comment,
-      // statementOpen: '',
-      // statementClose: '',
     })
   }
 
@@ -161,6 +160,7 @@ function Lass (input = '') {
 
   // Do a second pass to determine the relationship between lines
   const indentStack = []
+  let multiLineExpression = false // COMMA_CHAR or SPACE_CHAR
   const lineObjsLength = lineObjs.length
   const out = []
   for (let i = 0; i < lineObjsLength; i++) {
@@ -175,15 +175,27 @@ function Lass (input = '') {
         if (! next) {
           // Case for the very last line
           curr.closingSymbol = popIndentStack(curr.indent, curr.lineNum)
-          curr.content = parseDeclaration(curr.content)
+
+          if (multiLineExpression) {
+            multiLineExpression = false
+            curr.content = curr.content + ';'
+          } else {
+            // Only parse if we know it's not part of a multiLineExpression
+            curr.content = parseDeclaration(curr.content)
+          }
           return writeLine(curr)
         }
         else if (next.indent === curr.indent) {
           // No nesting follows
-          if (curr.content.endsWith(',')) {
+          if (multiLineExpression) {
+            curr.content = curr.content + multiLineExpression
+            return writeLine(curr)
+          }
+          else if (curr.content.endsWith(',')) {
             // Multi/Group selector
             return writeLine(curr)
-          } else {
+          }
+          else {
             // Single line statements like @import,
             // Property:value declarations, or
             // Single line mixins
@@ -194,7 +206,15 @@ function Lass (input = '') {
         else if (next.indent < curr.indent) {
           // Curr is last in tip of branch
           curr.closingSymbol = popIndentStack(curr.indent - next.indent)
-          curr.content = parseDeclaration(curr.content)
+
+          if (multiLineExpression) {
+            multiLineExpression = false
+            curr.content = curr.content + ';'
+          } else {
+            // Only parse if we know it's not part of a multiLineExpression
+            curr.content = parseDeclaration(curr.content)
+          }
+
           return writeLine(curr)
         }
         else if (next.indent > curr.indent) {
@@ -206,18 +226,27 @@ function Lass (input = '') {
 
           if (curr.content.startsWith('+')) {
             // remove starting '+' and trailing ')'
-            // @TODO handle #mixins (they don't hae to be just . classes)
+            // @TODO handle id (#) mixins
             curr.content = curr.content.replace('+', '.')
             curr.content = curr.content.slice(0, -1) + ',' // remove trailing ')'
             pushIndentStack(curr.lineNum, curr.indent, '});')
             curr.openingSymbol = '{'
           }
+          else if (curr.content.endsWith('[,]')) {
+            /*
+              @palette[,]
+                primary #0000E0
+                info #02d7e1
+                success #02e10c
+            */
+            multiLineExpression = COMMA_CHAR
+            curr.content = curr.content.replace('[,]', '') + ':'
+            pushIndentStack(curr.lineNum, curr.indent, '')
+          }
           else {
             pushIndentStack(curr.lineNum, curr.indent, '}')
             curr.openingSymbol = '{'
           }
-          // pushIndentStack(curr.lineNum, curr.indent, '}')
-          // curr.openingSymbol = '{'
           return writeLine(curr)
         }
         else {

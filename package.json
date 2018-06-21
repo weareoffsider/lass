@@ -17,6 +17,8 @@
   },
   "homepage": "https://github.com/weareoffsider/lass#readme",
   "devDependencies": {
-    "jest": "23.1.0"
+    "jest": "23.1.0",
+    "less": "3.0.4",
+    "less-plugin-lists": "1.1.1"
   }
 }
