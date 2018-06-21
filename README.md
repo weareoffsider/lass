@@ -22,7 +22,6 @@ Lass
       text-decoration underline
 ```
 ...becomes:
-```
 
 ```
 @import (importRule) "something";

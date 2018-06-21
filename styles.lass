@@ -1,0 +1,11 @@
+@plugin "./node_modules/less-plugin-lists/lib/index.js"
+
+@palette[,]
+  primary #0000E0
+  info #02d7e1
+  success #02e10c
+
+h1
+  color at(@palette, primary)
+  background-color at(@palette, info)
+  border-color at(@palette, success)
