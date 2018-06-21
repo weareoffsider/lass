@@ -1,0 +1,52 @@
+const Lass = require('../index')
+
+test('Multi line properties and variables', () => {
+expect(Lass(
+`
+@palette[,]
+  primary #0000E0
+  info #02d7e1
+  success #02e10c
+
+.el
+  background[,]
+    #ffcc00
+    url("/background.png")
+    linear-gradient(to right, rgba(30, 75, 115, 1), rgba(255, 255, 255, 0))
+    // ^ There's no syntax to split this linear-gradient expression over multiple lines... yet
+
+  transition[,] // split properties over multiple lines
+    opacity 0.3s
+    color 0.3s easeout
+
+  // space separated works too
+  transform[ ]
+    scale(1)
+    rotateX(90deg)
+    translate3d(0, -50%, 0)
+`
+)).toBe(
+`
+@palette:
+  primary #0000E0,
+  info #02d7e1,
+  success #02e10c;
+
+.el {
+  background:
+    #ffcc00,
+    url("/background.png"),
+    linear-gradient(to right, rgba(30, 75, 115, 1), rgba(255, 255, 255, 0));
+    // ^ There's no syntax to split this linear-gradient expression over multiple lines... yet
+
+  transition: // split properties over multiple lines
+    opacity 0.3s,
+    color 0.3s easeout;
+
+  // space separated works too
+  transform:
+    scale(1)
+    rotateX(90deg)
+    translate3d(0, -50%, 0); }
+`
+)})

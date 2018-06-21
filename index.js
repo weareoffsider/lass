@@ -191,7 +191,7 @@ function Lass (input = '') {
         else if (next.indent === curr.indent) {
           // No nesting follows
           if (multiLineExpression) {
-            curr.content = curr.content + multiLineExpression
+            curr.content = (curr.content + multiLineExpression).trim()
             return writeLine(curr)
           }
           else if (curr.content.endsWith(',')) {
@@ -222,14 +222,13 @@ function Lass (input = '') {
             curr.openingSymbol = '{'
           }
           else if (curr.content.endsWith('[,]')) {
-            /*
-              @palette[,]
-                primary #0000E0
-                info #02d7e1
-                success #02e10c
-            */
             multiLineExpression = COMMA_CHAR
             curr.content = curr.content.replace('[,]', '') + ':'
+            pushIndentStack(curr.lineNum, curr.indent, '')
+          }
+          else if (curr.content.endsWith('[ ]')) {
+            multiLineExpression = SPACE_CHAR
+            curr.content = curr.content.replace('[ ]', '') + ':'
             pushIndentStack(curr.lineNum, curr.indent, '')
           }
           else {
