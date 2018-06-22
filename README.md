@@ -1,5 +1,7 @@
-Lass
-====
+Lass¬
+  it's {Less} with just a little less.
+
+---
 
 [Less](http://lesscss.org/), but indented, no colons, no brances.
 
