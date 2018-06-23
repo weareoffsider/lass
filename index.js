@@ -1,126 +1,3 @@
-const sample = `.class
-  &__something
-    &::hover
-      color red
-
-@import "something"
-@import (importRule) "something"
-
-// Comment
-@link-color #428bca // a nice purple
-@link-color red // or a red // if purp not your thang
-@my-selector link
-
-.classname
-  property value
-  font-size 8, 2, 4
-  // ^ this ain't valid
-
-  &__el
-    content "element"
-    &::hover
-      text-decoration underline
-    color red
-
-h1
-  font-weight bold
-
-h1, h2
-  font-size big
-
-h1,
-h2
-  font-size big
-
-[disabled]
-  opacity 0.5
-
-// Usage
-.@{my-selector}
-  font-weight bold
-  color @link-color
-  line-height 40px
-
-#id
-  for you and me // for: you and me <-- like that
-
-  &::after
-    content ''
-
-
-// Problem A.1
-.test()
-  abc 123
-
-.mixin(@color; @margin: 2)
-  color-3 @color
-  margin @margin
-
-.some .selector div
-  .mixin(#008000)
-
-  // Problem A.2 / .from(768)
-  +from(768)
-    color red
-
-    &:hover
-      color blue
-
-  // ^ .from(768, { color: red }) note end '})'
-
-.from(@px, @rules)
-  @media screen and (min-width: @px)
-    @rules()
-`
-
-const next = `
-.animation
-  transition (
-    opacity 1s,
-    color 1s
-  )
-
-  // or, where the parse knows which properties are space and comma separated
-  transition[,]
-    opacity 1s
-    color 1s
-
-  background[ ]
-    no-repeat
-    url()
-    center
-    cover
-
-  transform[ ]
-    rotate(90deg)
-    translateY(-50%)
-`
-
-const objs = `
-
-@object: {
-  foo: 1
-  bar: 2
-}
-
-// into
-@object______foo: 1;
-@object______bar: 1;
-`
-
-/*
-Terms
------
-selector
-property + value = declaration
-multiple declarations = declaration block
-selector + declaration block = ruleset
-at-rule
-nested statements
-*/
-
-
-Lass(sample)
 function Lass (input = '') {
   const NUM_INDENT_SPACES = 2
   const SPACE_CHAR = ' '
@@ -282,6 +159,19 @@ function Lass (input = '') {
     return closing.join('')
   }
 
+  function replaceObjectReference (str) {
+    // `@Typography.body.font-size` -> `at(at(@Typography, body), font-weight)`
+    return str.replace(/(@[a-zA-Z-\d]+\.[a-zA-Z-\d.]+)/g, (match) => {
+      // https://regex101.com/r/LnGhNw/1
+      return match
+        .split('.')
+        .reduce((acc, x, i) => {
+          if (i === 0) return x // @Typography
+          return `at(${acc}, ${x})` // at(@Typography, body)
+        }, '')
+    })
+  }
+
   function parseDeclaration (content) {
     if (content.startsWith('@import'))
       return content + ';'
@@ -294,9 +184,12 @@ function Lass (input = '') {
     val = val.trim()
 
     if (prop && val) {
+      prop = replaceObjectReference(prop)
+      val = replaceObjectReference(val)
       return prop + ': ' + val + ';'
     }
 
+    content = replaceObjectReference(content)
     return content + ';'
   }
 
