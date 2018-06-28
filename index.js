@@ -33,15 +33,17 @@ function Lass (input = '') {
     })
   }
 
-  // console.log(lineObjs)
-
   // Do a second pass to determine the relationship between lines
+  // Processing states
   const indentStack = []
   let multiLineExpression = false // COMMA_CHAR or SPACE_CHAR
+
   const lineObjsLength = lineObjs.length
   const out = []
+  let lineNum = undefined
   for (let i = 0; i < lineObjsLength; i++) {
     out.push((() => {
+      lineNum = i + 1
       const curr = lineObjs[i]
 
       if (!curr.content) {
@@ -59,10 +61,11 @@ function Lass (input = '') {
           if (multiLineExpression) {
             multiLineExpression = false
             curr.content = curr.content + ';'
-          } else {
-            // Only parse if we know it's not part of a multiLineExpression
-            curr.content = parseDeclaration(curr.content)
+            // Don't parse if we know it's not part of a multiLineExpression
+            return writeLine(curr)
           }
+
+          curr.content = parseDeclaration(curr.content)
           return writeLine(curr)
         }
         else if (next.indent === curr.indent) {
@@ -89,7 +92,6 @@ function Lass (input = '') {
           if (next.indent !== curr.indent + 1) {
             console.error(`Indentation error for line ${next.lineNum}`)
           }
-
           if (curr.content.startsWith('+')) {
             // remove starting '+' and trailing ')'
             // @TODO handle id (#) mixins
@@ -97,21 +99,29 @@ function Lass (input = '') {
             curr.content = curr.content.slice(0, -1) + ',' // remove trailing ')'
             pushIndentStack(curr.lineNum, curr.indent, '});')
             curr.openingSymbol = '{'
+            return writeLine(curr)
           }
-          else if (curr.content.endsWith('[,]')) {
+          if (curr.content.endsWith('[,]')) {
             multiLineExpression = COMMA_CHAR
             curr.content = curr.content.replace('[,]', '') + ':'
             pushIndentStack(curr.lineNum, curr.indent, '')
+            return writeLine(curr)
           }
-          else if (curr.content.endsWith('[ ]')) {
+          if (curr.content.endsWith('[ ]')) {
             multiLineExpression = SPACE_CHAR
             curr.content = curr.content.replace('[ ]', '') + ':'
             pushIndentStack(curr.lineNum, curr.indent, '')
+            return writeLine(curr)
           }
-          else {
-            pushIndentStack(curr.lineNum, curr.indent, '}')
-            curr.openingSymbol = '{'
+          if (contentIsObjectDefinition(curr.content)) {
+            console.log('contentIsObjectDefinition')
+            console.log(curr)
+            // @TODO instead of multiple stacks, why not manage a single stack with a type eg type: OBJECT_DEFINITION
+            curr.content = curr.content + ':'
+            return writeLine(curr)
           }
+          pushIndentStack(curr.lineNum, curr.indent, '}')
+          curr.openingSymbol = '{'
           return writeLine(curr)
         }
         else {
@@ -157,6 +167,14 @@ function Lass (input = '') {
       closing.push(indentStack.pop().closingSymbol)
     }
     return closing.join('')
+  }
+
+  function contentIsObjectDefinition (str) {
+    // @palette
+    //   greenHaze #24c875
+    //   scienceBlue #003CE1
+    //   alabaster #f7f7f7
+    return str.match(/^@[a-zA-Z-\d]+$/)
   }
 
   function replaceObjectReference (str) {
