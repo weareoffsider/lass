@@ -285,29 +285,30 @@ function Lass (input = '') {
     const isLastChild = i === arr.length - 1
     const separatorChar = isLastChild ? '' : separator(node.type)
 
-    console.log({
-      IS_LAST: i === arr.length - 1,
-      lineNum: node.lineNum,
-      i,
-      arrLength: arr.length,
-      separatorChar,
-      type: node.type,
-      indentChars,
-      openTag,
-      closeTag,
-    })
 
     const children = node.children.length
       ? '\n' + node.children.map(iterateNodes).join('\n')
       : ''
+
+    console.log({
+      IS_LAST: i === arr.length - 1,
+      lineNum: node.lineNum,
+      content: node.content,
+      // i,
+      // arrLength: arr.length,
+      separatorChar,
+      // type: node.type,
+      // indentChars,
+      // openTag,
+      closeTag,
+      // children,
+    })
 
     return `` +
       indentChars +
       node.content +
       openTag +
       (! children ? separatorChar : '') +
-      (node.comment ? ` // ${node.comment}` : ``) +
-      // ` // [${node.lineNum}]` +
       children +
       closeTag +
       (children ? separatorChar : '') +
@@ -363,7 +364,6 @@ function Lass (input = '') {
 
   function separator (type) {
     switch (type) {
-      case OBJECT_DEFINITION:
       case OBJECT_PROPERTY:
       case OBJECT_VALUE:
         return ','
@@ -371,17 +371,6 @@ function Lass (input = '') {
         return ''
     }
   }
-
-  // function endOfLine (type, isLast = false) {
-  //   switch (type) {
-  //     case OBJECT_VALUE:
-  //       return ! isLast ? ',' : ''
-  //     case RULE:
-  //       return ';'
-  //     default:
-  //       return ''
-  //   }
-  // }
 
   function writeLine (obj) {
     const indentChars = '  '.repeat(obj.indent)

@@ -55,3 +55,10 @@ Tests
 =====
 
 Run tests with `npm run test`
+
+
+
+To Do
+=====
+
+- [ ] Better handling and errors for syntax

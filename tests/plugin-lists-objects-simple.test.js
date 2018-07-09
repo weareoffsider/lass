@@ -10,14 +10,13 @@ const Lass = require('../index'); test('less-plugins-lists and pseudo-objects', 
 `
 )).toBe(
 `
-@Typography: l( // OBJECT_DEFINITION
-  body l( // OBJECT_PROPERTY
-    font-size 22px, // OBJECT_VALUE
+@Typography: l(
+  body l(
+    font-size 22px,
     font-weight normal,
-    line-height 1.3), // OBJECT_VALUE IS_LAST
+    line-height 1.3),
   h2 l(
     font-size 36px,
-    font-weight bold,
-    line-height 1.2));
+    font-weight bold));
 `
 )});
