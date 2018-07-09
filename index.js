@@ -1,3 +1,5 @@
+const util = require('util')
+
 function Lass (input = '') {
   const NUM_INDENT_SPACES = 2
   const SPACE_CHAR = ' '
@@ -43,6 +45,8 @@ function Lass (input = '') {
   const STATEMENT = "STATEMENT"
   const RULE = "RULE"
   const EMPTY = "EMPTY"
+  const UNKNOWN = "UNKNOWN"
+  const COMMENT = "COMMENT"
 
   const tree = (() => {
     const _tree = []
@@ -87,6 +91,8 @@ function Lass (input = '') {
         indent: line.indent || 0,
         type: line.type,
         content: line.content || '',
+        prop: line.prop || '',
+        val: line.val || '',
         comment: line.comment || '',
         children: [],
       }
@@ -102,7 +108,8 @@ function Lass (input = '') {
       }
     }
 
-    function add (line) {
+    function add (line, type) {
+      line.type = type
       const atIndent = line.indent
       if (atIndent > indent) {
         // Add as child of node at pointer
@@ -110,7 +117,7 @@ function Lass (input = '') {
         const length = pushToBranch(node, line)
         // Update pointers
         pointer.push(0)
-        typeArr.push(line.type)
+        typeArr.push(type)
         // console.log(typeArr, pointer, '>', line.lineNum)
       }
 
@@ -122,7 +129,7 @@ function Lass (input = '') {
         const length = pushToBranch(node, line)
         // Update pointers
         pointer = parentPointer.concat([length - 1])
-        typeArr = typeArr.slice(0, -1).concat([line.type])
+        typeArr = typeArr.slice(0, -1).concat([type])
         // console.log(typeArr, pointer, '=', line.lineNum)
       }
 
@@ -133,7 +140,7 @@ function Lass (input = '') {
         const length = pushToBranch(node, line)
         // Update pointer
         pointer = pointerAtIndent.concat([length - 1])
-        typeArr = typeArr.slice(0, atIndent).concat([line.type])
+        typeArr = typeArr.slice(0, atIndent).concat([type])
         // console.log(typeArr, pointer, '<', line.lineNum, atIndent)
       }
 
@@ -156,37 +163,58 @@ function Lass (input = '') {
       const curr = lineObjs[i]
       const next = getNextMeaningful(lineObjs, i)
 
+      // @TODO Catch indent greater than NUM_INDENT_SPACES
+      // if (next.indent !== curr.indent + 1) {
+      //   console.error(`Indentation error for line ${next.lineNum}`)
+      // }
 
+
+      // Comments and empty lines
+      if (! curr.content && curr.comment) {
+        if (next && next.indent > curr.indent) {
+          console.error("You can not have children of comments")
+        }
+        return tree.add(curr, COMMENT)
+      }
       if (! curr.content) {
         curr.type = EMPTY
         node = tree.add(curr)
         return
-        // return writeLine(curr)
       }
 
 
+      // Object definitions
       if (isObjectDefinition(curr.content)) {
-        curr.type = OBJECT_DEFINITION
-        node = tree.add(curr)
-        return
+        return tree.add(curr, OBJECT_DEFINITION)
       }
-
       if (tree.includesType(OBJECT_DEFINITION)) {
         if (! next || next.indent < curr.indent) {
-          curr.type = OBJECT_VALUE
-          node = tree.add(curr)
-          return
+          return tree.add(curr, OBJECT_VALUE)
         }
         if (next.indent === curr.indent) {
-          curr.type = OBJECT_VALUE
-          return tree.add(curr)
+          return tree.add(curr, OBJECT_VALUE)
         }
         if (next.indent > curr.indent) {
-          curr.type = OBJECT_PROPERTY
-          node = tree.add(curr)
-          return
+          return tree.add(curr, OBJECT_PROPERTY)
         }
       }
+
+
+      // Statements
+      // if (tree.includesType(STATEMENT)) {
+        if (! next || next.indent < curr.indent) {
+          return tree.add(curr, RULE)
+        }
+        if (next.indent === curr.indent) {
+          return tree.add(curr, RULE)
+        }
+        if (next.indent > curr.indent) {
+          return tree.add(curr, STATEMENT)
+        }
+      // }
+
+      tree.add(curr, UNKNOWN)
+
 
       // ---
 
@@ -202,12 +230,6 @@ function Lass (input = '') {
       //     curr.content = curr.content + ';'
       //     // Don't parse if we know it's not part of a multiLineExpression
       //     return writeLine(curr)
-      //   }
-
-      //   if (inObjectDefinition !== false) {
-      //     if (curr.indent === inObjectDefinition) {
-      //       inObjectDefinition = false
-      //     }
       //   }
 
       //   curr.content = parseDeclaration(curr.content)
@@ -285,28 +307,39 @@ function Lass (input = '') {
     const isLastChild = i === arr.length - 1
     const separatorChar = isLastChild ? '' : separator(node.type)
 
+    let content = node.content
+
+    if (node.type === RULE) {
+      content = `${node.prop}: ${node.val};`
+    }
+
+    if (node.type === COMMENT) {
+      return `${indentChars}// ${node.comment}`
+    }
 
     const children = node.children.length
       ? '\n' + node.children.map(iterateNodes).join('\n')
       : ''
 
-    console.log({
-      IS_LAST: i === arr.length - 1,
-      lineNum: node.lineNum,
-      content: node.content,
-      // i,
-      // arrLength: arr.length,
-      separatorChar,
-      // type: node.type,
-      // indentChars,
-      // openTag,
-      closeTag,
-      // children,
-    })
+    // console.log(node)
+    console.log(util.inspect(node, false, null))
+    // console.log({
+    //   IS_LAST: i === arr.length - 1,
+    //   lineNum: node.lineNum,
+    //   content: node.content,
+    //   // i,
+    //   // arrLength: arr.length,
+    //   separatorChar,
+    //   // type: node.type,
+    //   // indentChars,
+    //   // openTag,
+    //   closeTag,
+    //   // children,
+    // })
 
     return `` +
       indentChars +
-      node.content +
+      content +
       openTag +
       (! children ? separatorChar : '') +
       children +
@@ -314,37 +347,6 @@ function Lass (input = '') {
       (children ? separatorChar : '') +
       ''
   }
-
-
-  // function writeFromTree (tree) {
-  //   function createLine (obj, i, arr) {
-  //     {
-  //       type,
-  //       indent,
-  //       content,
-  //       comment,
-  //     } = obj
-
-  //     const indentChars = '  '.repeat(obj.indent)
-  //     const last = i === arr.length - 1
-  //     const sep = last ? '' : separator(obj.type)
-
-  //     // console.log((!!obj.isLast ? '- ' : 'X ') + obj.lineNum + ' :: ' + obj.content + sep)
-  //     const open = symbols(type)[0]
-  //     // const close = obj.stack
-  //     //   ? obj.stack.map(x => symbols(x.type)[1]).join('')
-  //     //   : ''
-  //     const comment = obj.comment + ` [${obj.lineNum}]`
-
-  //     return indentChars +
-  //       obj.content +
-  //       sep +
-  //       open +
-  //       close +
-  //       (obj.content && obj.comment ? ' ' : '') +
-  //       (comment ? '// ' + comment : '')
-  //   }
-  // }
 
 
   function symbols (type) {
@@ -393,23 +395,6 @@ function Lass (input = '') {
       (obj.content && obj.comment ? ' ' : '') +
       (comment ? '// ' + comment : '')
   }
-
-  // function pushIndentStack (lineNum, indent, closingSymbol, type = undefined) {
-  //   indentStack.push({
-  //     type,
-  //     lineNum,
-  //     indent,
-  //     closingSymbol,
-  //   })
-  // }
-
-  // function popIndentStack (indent) {
-  //   const closing = []
-  //   for (let i = 0; i < indent; i++) {
-  //     closing.push(indentStack.pop().closingSymbol)
-  //   }
-  //   return closing.join('')
-  // }
 
   function isObjectDefinition (str) {
     // @palette
