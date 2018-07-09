@@ -47,6 +47,7 @@ function Lass (input = '') {
   const EMPTY = "EMPTY"
   const UNKNOWN = "UNKNOWN"
   const COMMENT = "COMMENT"
+  const ATRULE = "ATRULE"
 
   const tree = (() => {
     const _tree = []
@@ -200,6 +201,13 @@ function Lass (input = '') {
       }
 
 
+      // @ At rules
+      if (isAtRule(curr.content)) {
+        return tree.add(curr, ATRULE)
+        // @TODO warn for indentation
+      }
+
+
       // Statements
       // if (tree.includesType(STATEMENT)) {
         if (! next || next.indent < curr.indent) {
@@ -317,6 +325,10 @@ function Lass (input = '') {
       return `${indentChars}// ${node.comment}`
     }
 
+    if (node.type === ATRULE) {
+      return indentChars + node.content + `;`
+    }
+
     const children = node.children.length
       ? '\n' + node.children.map(iterateNodes).join('\n')
       : ''
@@ -394,6 +406,12 @@ function Lass (input = '') {
       close +
       (obj.content && obj.comment ? ' ' : '') +
       (comment ? '// ' + comment : '')
+  }
+
+  function isAtRule (str) {
+    if (str.startsWith('@import')) return true
+    if (str.startsWith('@plugin')) return true
+    return false
   }
 
   function isObjectDefinition (str) {

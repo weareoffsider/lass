@@ -1,4 +1,8 @@
 const Lass = require('../index'); test('less-plugins-lists and pseudo-objects', () => {expect(Lass(`
+@import "something"
+@import (importRule) "something"
+@plugin "./node_modules/less-plugin-lists/lib/index.js"
+
 @Typography                 // OBJECT_DEFINITION
   body                      // OBJECT_PROPERTY
     font-size 22px          // OBJECT_VALUE
@@ -18,6 +22,10 @@ const Lass = require('../index'); test('less-plugins-lists and pseudo-objects', 
 `
 )).toBe(
 `
+@import "something";
+@import (importRule) "something";
+@plugin "./node_modules/less-plugin-lists/lib/index.js";
+
 @Typography: l(
   body l(
     font-size 22px,
