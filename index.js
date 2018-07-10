@@ -58,6 +58,8 @@ function Lass (input = '') {
     let indent = 0
     let pointer = []
     let typeArr = []
+    // let commentLines = {}
+    // let whitespaceLines = []
 
     return {
       add,
@@ -120,10 +122,12 @@ function Lass (input = '') {
     function add (line, type) {
       line.type = type
 
-      if (type === EMPTY) {
-        return
-        // line.indent = indent
-      }
+      // if (type === EMPTY) {
+      //   return
+      //   // line.indent = indent
+      // }
+
+      // if (type === COMMENT) return
 
       const atIndent = line.indent
       if (atIndent > indent) {
@@ -167,6 +171,10 @@ function Lass (input = '') {
     }
   })()
 
+
+  let whitespaceLines = []
+
+
   const lineObjsLength = lineObjs.length
   let lineNum = undefined
   let node = undefined
@@ -185,23 +193,25 @@ function Lass (input = '') {
       // console.log(tree.curr())
 
       // Comments and empty lines
-      if (! curr.content && curr.comment) {
-        if (next && next.indent > curr.indent) {
-          console.error("You can not have children of comments")
-          // Maybe in future we will add the ability for anything nested inside a comment to be "commented out". So in-part this is preventing future breaking changes as well as keeping our parser as simple as possible for now.
-        }
-        return tree.add(curr, COMMENT)
-        // return // skip
-      }
       if (! curr.content) {
+        // if (curr.comment) {
+        //   if (next && next.indent > curr.indent) {
+        //     console.error("You can not have children of comments")
+        //     // Maybe in future we will add the ability for anything nested inside a comment to be "commented out". So in-part this is preventing future breaking changes as well as keeping our parser as simple as possible for now.
+        //   }
+        //   // return tree.add(curr, COMMENT)
+        //   whitespaceLines.push(curr.lineNum)
+        //   return false // skip
+        // }
         // So, it might be that empty lines and their lack of indentation is breaking the way children are added into the AST
         // The problem is:
         // a) empty lines often have an indent of 0, breaking the tree's understanding of what children follow, and
         // b) comments can be treated as children, meaning that any separators applied to comments will add incorrect syntax
         // console.log(EMPTY, tree.currentIndent())
         // curr.indent = tree.curr().indent)
-        return tree.add(curr, EMPTY)
-        // return // skip
+        // return tree.add(curr, EMPTY)
+        whitespaceLines.push(curr.lineNum)
+        return // skip
       }
 
 
@@ -332,13 +342,23 @@ function Lass (input = '') {
     // .join(`\n`)
     // .split(`\n`)
     // .map(applyComments)
-    .join(`\n`)
+    .join(`\n`) + '\n'
 
   function applyComments (str, i) {
     console.log(str, i, lineComments[i])
     return lineComments[i]
       ? str + ' // ' + lineComments[i]
       : str
+  }
+
+  function maybeNewLine (lineNum, count = 0) {
+    const front = whitespaceLines[0]
+    if (! front) return '\n'.repeat(count)
+    if (lineNum < front) return '\n'.repeat(count)
+
+    // Remove the first item from the array, and
+    whitespaceLines.shift()
+    return maybeNewLine(lineNum, count + 1)
   }
 
   function iterateNodes (node, i, arr) {
@@ -349,20 +369,24 @@ function Lass (input = '') {
 
     let content = node.content
 
+    console.log(node.lineNum)
+    const _maybeNewLine = maybeNewLine(node.lineNum)
+
+
     if (node.type === RULE) {
       content = `${node.prop}: ${node.val};`
     }
 
-    if (node.type === EMPTY) {
-      return ``
-    }
+    // if (node.type === EMPTY) {
+    //   return ``
+    // }
 
-    if (node.type === COMMENT) {
-      return ``
-    }
+    // if (node.type === COMMENT) {
+    //   return ``
+    // }
 
     if (node.type === ATRULE) {
-      return indentChars + node.content + ';'
+      return _maybeNewLine + indentChars + node.content + ';'
     }
 
     const children = node.children.length
@@ -381,6 +405,7 @@ function Lass (input = '') {
 
 
     return `` +
+      _maybeNewLine +
       indentChars +
       content +
       openTag +
