@@ -9,6 +9,7 @@ function Lass (input = '') {
   const lines = input.split('\n')
   const linesLength = lines.length
   const lineObjs = []
+  const lineComments = []
 
   // Do a first pass of all lines, splitting up indentation, content, and comments
   for (let i = 0; i < linesLength; i++) {
@@ -35,6 +36,8 @@ function Lass (input = '') {
       val: val.trim(),
       comment: comment.trim(),
     })
+
+    lineComments.push(comment.trim() || '')
   }
 
   // Do a second pass to determine the relationship between lines
@@ -117,7 +120,10 @@ function Lass (input = '') {
     function add (line, type) {
       line.type = type
 
-      // if (type === EMPTY || type === COMMENT) {}
+      if (type === EMPTY) {
+        return
+        // line.indent = indent
+      }
 
       const atIndent = line.indent
       if (atIndent > indent) {
@@ -184,8 +190,8 @@ function Lass (input = '') {
           console.error("You can not have children of comments")
           // Maybe in future we will add the ability for anything nested inside a comment to be "commented out". So in-part this is preventing future breaking changes as well as keeping our parser as simple as possible for now.
         }
-        // return tree.add(curr, COMMENT)
-        return // skip
+        return tree.add(curr, COMMENT)
+        // return // skip
       }
       if (! curr.content) {
         // So, it might be that empty lines and their lack of indentation is breaking the way children are added into the AST
@@ -194,8 +200,8 @@ function Lass (input = '') {
         // b) comments can be treated as children, meaning that any separators applied to comments will add incorrect syntax
         // console.log(EMPTY, tree.currentIndent())
         // curr.indent = tree.curr().indent)
-        // return tree.add(curr, EMPTY)
-        return // skip
+        return tree.add(curr, EMPTY)
+        // return // skip
       }
 
 
@@ -321,7 +327,19 @@ function Lass (input = '') {
 
   tree.log()
 
-  return tree.ast().map(iterateNodes).join(`\n`)
+  return tree.ast()
+    .map(iterateNodes)
+    // .join(`\n`)
+    // .split(`\n`)
+    // .map(applyComments)
+    .join(`\n`)
+
+  function applyComments (str, i) {
+    console.log(str, i, lineComments[i])
+    return lineComments[i]
+      ? str + ' // ' + lineComments[i]
+      : str
+  }
 
   function iterateNodes (node, i, arr) {
     const indentChars = `  `.repeat(node.indent)
@@ -340,24 +358,33 @@ function Lass (input = '') {
     }
 
     if (node.type === COMMENT) {
-      return `${indentChars}// ${node.comment}`
+      return ``
     }
 
     if (node.type === ATRULE) {
-      return indentChars + node.content + `;`
+      return indentChars + node.content + ';'
     }
 
     const children = node.children.length
       ? '\n' + node.children.map(iterateNodes).join('\n')
       : ''
 
+    // We don't have a nice way of dealing with comments appearing *after* separator characters and closeTags, so we only show them when nodes have children and we can be sure not to have them end up in the wrong place.
+    const comment = node.comment
+      ? ` // ${node.comment} [${node.lineNum}]`
+      :` // [${node.lineNum}]`
+    const showComment = (node.type === ATRULE)// || children
+
+
     // if (node.lineNum === 16)
     //   console.log(util.inspect(node, false, null))
+
 
     return `` +
       indentChars +
       content +
       openTag +
+      // (showComment ? comment : '') +
       (! children ? separatorChar : '') +
       children +
       closeTag +

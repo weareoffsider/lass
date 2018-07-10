@@ -21,12 +21,15 @@ const Lass = require('../index'); test('less-plugins-lists and pseudo-objects', 
       font-size blue
       transition color 0.3s, opacity 0.3s
 
-// Media
+// Component
 .component
   width 300px
   height 100px
+
   @media (min-width: 768px)
     width 600px
+
+    // Nested @media ftw
     @media (min-resolution: 192dpi)
       background-image url(/img/retina2x.png)
 
@@ -39,8 +42,8 @@ const Lass = require('../index'); test('less-plugins-lists and pseudo-objects', 
 @import (importRule) "something";
 @plugin "./node_modules/less-plugin-lists/lib/index.js";
 
-@Typography: l(
-  body l(
+@Typography: l( // OBJECT_DEFINITION
+  body l( // OBJECT_PROPERTY
     font-size 22px,
     font-weight normal,
     line-height 1.3),
@@ -51,22 +54,21 @@ const Lass = require('../index'); test('less-plugins-lists and pseudo-objects', 
 // Class
 .class {
   &__something {
-
     &::hover {
       color: red;
       font-size: blue;
       transition: color 0.3s, opacity 0.3s;}}}
 
-// Media
+// Component
 .component {
   width: 300px;
   height: 100px;
-
   @media (min-width: 768px) {
     width: 600px;
+
+    // Nested @media ftw
     @media (min-resolution: 192dpi) {
       background-image: url(/img/retina2x.png);}}
-
   @media (min-width: 1280px) {
     width: 800px;}}
 `
