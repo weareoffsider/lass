@@ -48,6 +48,7 @@ function Lass (input = '') {
   const UNKNOWN = "UNKNOWN"
   const COMMENT = "COMMENT"
   const ATRULE = "ATRULE"
+  // const MEDIAQUERY = "MEDIAQUERY"
 
   const tree = (() => {
     const _tree = []
@@ -58,7 +59,11 @@ function Lass (input = '') {
     return {
       add,
       log,
-      includesType: (type) => typeArr.includes(type),
+      getTypeArr: () => typeArr,
+      includesType: (type, indent) => {
+        return typeArr.slice(0, indent).includes(type)
+        // The slice here makes sure we only look at a portion of the typeArr in the tree above the specified indent
+      },
       ast: () => _tree,
     }
 
@@ -111,6 +116,9 @@ function Lass (input = '') {
 
     function add (line, type) {
       line.type = type
+
+      // if (type === EMPTY || type === COMMENT) {}
+
       const atIndent = line.indent
       if (atIndent > indent) {
         // Add as child of node at pointer
@@ -146,12 +154,10 @@ function Lass (input = '') {
       }
 
       indent = atIndent
-
-      return node
     }
 
     function log () {
-      console.log(_tree)
+      console.log(util.inspect(_tree, false, null))
     }
   })()
 
@@ -170,17 +176,26 @@ function Lass (input = '') {
       // }
 
 
+      // console.log(tree.curr())
+
       // Comments and empty lines
       if (! curr.content && curr.comment) {
         if (next && next.indent > curr.indent) {
           console.error("You can not have children of comments")
+          // Maybe in future we will add the ability for anything nested inside a comment to be "commented out". So in-part this is preventing future breaking changes as well as keeping our parser as simple as possible for now.
         }
-        return tree.add(curr, COMMENT)
+        // return tree.add(curr, COMMENT)
+        return // skip
       }
       if (! curr.content) {
-        curr.type = EMPTY
-        node = tree.add(curr)
-        return
+        // So, it might be that empty lines and their lack of indentation is breaking the way children are added into the AST
+        // The problem is:
+        // a) empty lines often have an indent of 0, breaking the tree's understanding of what children follow, and
+        // b) comments can be treated as children, meaning that any separators applied to comments will add incorrect syntax
+        // console.log(EMPTY, tree.currentIndent())
+        // curr.indent = tree.curr().indent)
+        // return tree.add(curr, EMPTY)
+        return // skip
       }
 
 
@@ -188,7 +203,7 @@ function Lass (input = '') {
       if (isObjectDefinition(curr.content)) {
         return tree.add(curr, OBJECT_DEFINITION)
       }
-      if (tree.includesType(OBJECT_DEFINITION)) {
+      if (tree.includesType(OBJECT_DEFINITION, curr.indent)) {
         if (! next || next.indent < curr.indent) {
           return tree.add(curr, OBJECT_VALUE)
         }
@@ -201,14 +216,14 @@ function Lass (input = '') {
       }
 
 
-      // @ At rules
+      // Single line @ At rules (does not include media queries which are statements)
       if (isAtRule(curr.content)) {
         return tree.add(curr, ATRULE)
         // @TODO warn for indentation
       }
 
-
       // Statements
+      // @media
       // if (tree.includesType(STATEMENT)) {
         if (! next || next.indent < curr.indent) {
           return tree.add(curr, RULE)
@@ -221,7 +236,7 @@ function Lass (input = '') {
         }
       // }
 
-      tree.add(curr, UNKNOWN)
+      // tree.add(curr, UNKNOWN)
 
 
       // ---
@@ -304,8 +319,7 @@ function Lass (input = '') {
     })()
   } // for
 
-  // tree.log()
-  // console.log(tree.ast())
+  tree.log()
 
   return tree.ast().map(iterateNodes).join(`\n`)
 
@@ -321,6 +335,10 @@ function Lass (input = '') {
       content = `${node.prop}: ${node.val};`
     }
 
+    if (node.type === EMPTY) {
+      return ``
+    }
+
     if (node.type === COMMENT) {
       return `${indentChars}// ${node.comment}`
     }
@@ -333,21 +351,8 @@ function Lass (input = '') {
       ? '\n' + node.children.map(iterateNodes).join('\n')
       : ''
 
-    // console.log(node)
-    console.log(util.inspect(node, false, null))
-    // console.log({
-    //   IS_LAST: i === arr.length - 1,
-    //   lineNum: node.lineNum,
-    //   content: node.content,
-    //   // i,
-    //   // arrLength: arr.length,
-    //   separatorChar,
-    //   // type: node.type,
-    //   // indentChars,
-    //   // openTag,
-    //   closeTag,
-    //   // children,
-    // })
+    // if (node.lineNum === 16)
+    //   console.log(util.inspect(node, false, null))
 
     return `` +
       indentChars +
@@ -411,6 +416,11 @@ function Lass (input = '') {
   function isAtRule (str) {
     if (str.startsWith('@import')) return true
     if (str.startsWith('@plugin')) return true
+    return false
+  }
+
+  function isMediaQuery (str) {
+    if (str.startsWith('@media')) return true
     return false
   }
 

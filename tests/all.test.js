@@ -15,10 +15,23 @@ const Lass = require('../index'); test('less-plugins-lists and pseudo-objects', 
 // Class
 .class
   &__something
+
     &::hover
       color red
       font-size blue
       transition color 0.3s, opacity 0.3s
+
+// Media
+.component
+  width 300px
+  height 100px
+  @media (min-width: 768px)
+    width 600px
+    @media (min-resolution: 192dpi)
+      background-image url(/img/retina2x.png)
+
+  @media (min-width: 1280px)
+    width 800px
 `
 )).toBe(
 `
@@ -38,9 +51,23 @@ const Lass = require('../index'); test('less-plugins-lists and pseudo-objects', 
 // Class
 .class {
   &__something {
+
     &::hover {
       color: red;
       font-size: blue;
       transition: color 0.3s, opacity 0.3s;}}}
+
+// Media
+.component {
+  width: 300px;
+  height: 100px;
+
+  @media (min-width: 768px) {
+    width: 600px;
+    @media (min-resolution: 192dpi) {
+      background-image: url(/img/retina2x.png);}}
+
+  @media (min-width: 1280px) {
+    width: 800px;}}
 `
 )});
