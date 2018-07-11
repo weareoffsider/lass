@@ -4,8 +4,6 @@ const util = require('util')
 
 function Lass (input = '') {
   const NUM_INDENT_SPACES = 2
-  const SPACE_CHAR = ' '
-  const COMMA_CHAR = ','
 
   // Types
   const OBJECT_DEFINITION = "OBJECT_DEFINITION"
@@ -81,7 +79,7 @@ function Lass (input = '') {
     console.error(`Condition not met for ${curr.lineNum}`)
   })
 
-  // tree.log()
+  tree.log()
   const whitespaceLines = tree.emptyLines()
 
   return tree.ast()
@@ -111,7 +109,13 @@ function Lass (input = '') {
 
 
     if (node.type === RULE) {
-      content = `${node.prop}: ${node.val};`
+      // Not all rules have a prop and value, eg
+      // `.mymixin(#ffcc00)` or `@rules()`
+      if (node.val) {
+        content = `${node.prop}: ${node.val};`
+      } else {
+        content = `${node.prop};`
+      }
     }
 
     if (node.type === ATRULE) {
@@ -131,7 +135,7 @@ function Lass (input = '') {
     return `` +
       _maybeNewLine +
       indentChars +
-      content +
+      replaceObjectReference(content) +
       openTag +
       (! children ? separatorChar : '') +
       children +
