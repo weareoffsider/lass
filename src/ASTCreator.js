@@ -6,11 +6,16 @@ module.exports = function () {
   let pointer = []
   let typeArr = []
   // let commentLines = {}
-  // let whitespaceLines = []
+  let emptyLines = []
+  //
 
   return {
     add,
     log,
+    addEmptyLine: (lineNum) => {
+      emptyLines.push(lineNum)
+    },
+    emptyLines: () => emptyLines,
     getTypeArr: () => typeArr,
     includesType: (type, indent) => {
       return typeArr.slice(0, indent).includes(type)
@@ -70,6 +75,7 @@ module.exports = function () {
     line.type = type
 
     // if (type === EMPTY) {
+    //   emptyLines.push(line.lineNum)
     //   return
     //   // line.indent = indent
     // }
