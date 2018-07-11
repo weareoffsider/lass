@@ -32,7 +32,7 @@ h1
 h1, h2
   font-size big
 
-h1,
+// h1,
 h2
   font-size big
 
@@ -107,7 +107,7 @@ h1 {
 h1, h2 {
   font-size: big;}
 
-h1,
+
 h2 {
   font-size: big;}
 
@@ -138,12 +138,12 @@ h2 {
 .some .selector div {
   .mixin(#008000);
 
-  // Problem A.2 / .from(768)
+
   .from(768, {
     color: red;
 
     &:hover {
-      color: blue; }});}
+      color: blue;}});}
 
 
 

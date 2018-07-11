@@ -10,6 +10,7 @@ function Lass (input = '') {
   const OBJECT_PROPERTY = "OBJECT_PROPERTY"
   const OBJECT_VALUE = "OBJECT_VALUE"
   const STATEMENT = "STATEMENT"
+  const MIXIN_STATEMENT = "MIXIN_STATEMENT"
   const RULE = "RULE"
   const ATRULE = "ATRULE"
 
@@ -72,6 +73,12 @@ function Lass (input = '') {
         return tree.add(curr, RULE)
       }
       if (next.indent > curr.indent) {
+
+        if (isMixinWithRules(curr.content)) {
+          curr.content = transformMixinWithRules(curr.content)
+          return tree.add(curr, MIXIN_STATEMENT)
+        }
+
         return tree.add(curr, STATEMENT)
       }
     // }
@@ -79,7 +86,7 @@ function Lass (input = '') {
     console.error(`Condition not met for ${curr.lineNum}`)
   })
 
-  tree.log()
+  // tree.log()
   const whitespaceLines = tree.emptyLines()
 
   return tree.ast()
@@ -155,6 +162,8 @@ function Lass (input = '') {
         return [``, ``]
       case STATEMENT:
         return [` {`, `}`]
+      case MIXIN_STATEMENT:
+        return [`, {`, `});`]
       default:
         return [``, ``]
     }
@@ -183,6 +192,15 @@ function Lass (input = '') {
     //   scienceBlue #003CE1
     //   alabaster #f7f7f7
     return str.match(/^@[a-zA-Z-\d]+$/)
+  }
+
+  function isMixinWithRules (str) {
+    return str.startsWith('+')
+  }
+
+  function transformMixinWithRules (str) {
+    // @TODO handle id (#) mixins
+    return '.' + str.slice(1, -1) // remove starting '+' and trailing ')'
   }
 
   function replaceObjectReference (str) {

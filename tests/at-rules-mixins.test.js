@@ -14,7 +14,7 @@ expect(Lass(
     color red
 
 +from(768)
-  h1,
+  // h1,
   h2
     font-size 120%
 
@@ -23,22 +23,22 @@ expect(Lass(
 `
 )).toBe(
 `
-// Inclusive of the value and above.
+
 .from(@unitlessPx, @rules) {
   @ems: unit( (@unitlessPx / 16), em);
   @media screen and (min-width: @ems) {
-    @rules(); }}
+    @rules();}}
 
 .el {
   .from(768, {
-    color: red; });}
+    color: red;});}
 
 .from(768, {
-  h1,
+
   h2 {
-    font-size: 120%; }
+    font-size: 120%;}
 
   body {
-    font-size: 18px; }});
+    font-size: 18px;}});
 `
 )})
