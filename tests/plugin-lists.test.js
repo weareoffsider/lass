@@ -4,7 +4,7 @@ test('less-plugins-lists and multi-line expressions', () => {expect(Lass(
 `
 @plugin "./node_modules/less-plugin-lists/lib/index.js"
 
-@palette[,]
+@palette
   primary #0000E0
   info #02d7e1
   success #02e10c
@@ -14,7 +14,7 @@ h1
   background-color at(@palette, info)
   border-color at(@palette, success)
 
-@sizes[,] // with comments
+@sizes // with comments
   small 10px
   medium 20px
   large 30px
@@ -23,19 +23,19 @@ h1
 `
 @plugin "./node_modules/less-plugin-lists/lib/index.js";
 
-@palette:
+@palette: l(
   primary #0000E0,
   info #02d7e1,
-  success #02e10c;
+  success #02e10c);
 
 h1 {
   color: at(@palette, primary);
   background-color: at(@palette, info);
-  border-color: at(@palette, success); }
+  border-color: at(@palette, success);}
 
-@sizes: // with comments
+@sizes: l(
   small 10px,
   medium 20px,
-  large 30px;
+  large 30px);
 `
 )});

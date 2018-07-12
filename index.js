@@ -1,6 +1,8 @@
 const stringToLineObjects = require('./src/stringToLineObjects')
 const ASTCreator = require('./src/ASTCreator')
+const cssProperties = require('./src/properties')
 const util = require('util')
+
 
 function Lass (input = '') {
   const NUM_INDENT_SPACES = 2
@@ -12,6 +14,10 @@ function Lass (input = '') {
   const STATEMENT = "STATEMENT"
   const MIXIN_STATEMENT = "MIXIN_STATEMENT"
   const RULE = "RULE"
+  const MULTILINE_PROPERTY = "MULTILINE_PROPERTY"
+  const MULTILINE_PROPERTY_COMMA = "MULTILINE_PROPERTY_COMMA"
+  const MULTILINE_VALUE = "MULTILINE_VALUE"
+  const MULTILINE_VALUE_COMMA = "MULTILINE_VALUE_COMMA"
   const ATRULE = "ATRULE"
 
   // First pass splitting on new lines to create an array of objects representing each line
@@ -63,25 +69,62 @@ function Lass (input = '') {
       // @TODO warn for indentation
     }
 
+    if (
+      tree.prevType() === MULTILINE_PROPERTY ||
+      tree.prevType() === MULTILINE_VALUE
+    ) {
+      if (
+        ! next ||
+        next.indent === curr.indent ||
+        next.indent < curr.indent
+      ) {
+        return tree.add(curr, MULTILINE_VALUE)
+      }
+    }
+
+    if (
+      tree.prevType() === MULTILINE_PROPERTY_COMMA ||
+      tree.prevType() === MULTILINE_VALUE_COMMA
+    ) {
+      if (
+        ! next ||
+        next.indent === curr.indent ||
+        next.indent < curr.indent
+      ) {
+        return tree.add(curr, MULTILINE_VALUE_COMMA)
+      }
+    }
+
     // Statements
     // @media
-    // if (tree.includesType(STATEMENT)) {
-      if (! next || next.indent < curr.indent) {
-        return tree.add(curr, RULE)
-      }
-      if (next.indent === curr.indent) {
-        return tree.add(curr, RULE)
-      }
-      if (next.indent > curr.indent) {
+    if (! next || next.indent < curr.indent) {
+      return tree.add(curr, RULE)
+    }
+    if (next.indent === curr.indent) {
+      return tree.add(curr, RULE)
+    }
 
-        if (isMixinWithRules(curr.content)) {
-          curr.content = transformMixinWithRules(curr.content)
-          return tree.add(curr, MIXIN_STATEMENT)
+    if (tree.includesType(STATEMENT)) {
+      if (next && next.indent > curr.indent) {
+        if (curr.prop && ! curr.val) {
+          if (cssProperties.commaSeparated.indexOf(curr.prop) !== -1) {
+            return tree.add(curr, MULTILINE_PROPERTY_COMMA)
+          }
+          if (cssProperties.all.indexOf(curr.prop) !== -1) {
+            return tree.add(curr, MULTILINE_PROPERTY)
+          }
         }
-
-        return tree.add(curr, STATEMENT)
       }
-    // }
+    }
+
+    if (next.indent > curr.indent) {
+      if (isMixinWithRules(curr.content)) {
+        curr.content = transformMixinWithRules(curr.content)
+        return tree.add(curr, MIXIN_STATEMENT)
+      }
+
+      return tree.add(curr, STATEMENT)
+    }
 
     console.error(`Condition not met for ${curr.lineNum}`)
   })
@@ -164,6 +207,9 @@ function Lass (input = '') {
         return [` {`, `}`]
       case MIXIN_STATEMENT:
         return [`, {`, `});`]
+      case MULTILINE_PROPERTY:
+      case MULTILINE_PROPERTY_COMMA:
+        return [`:`, `;`]
       default:
         return [``, ``]
     }
@@ -173,6 +219,7 @@ function Lass (input = '') {
     switch (type) {
       case OBJECT_PROPERTY:
       case OBJECT_VALUE:
+      case MULTILINE_VALUE_COMMA:
         return ','
       default:
         return ''

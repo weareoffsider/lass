@@ -21,6 +21,7 @@ module.exports = function () {
       return typeArr.slice(0, indent).includes(type)
       // The slice here makes sure we only look at a portion of the typeArr in the tree above the specified indent
     },
+    prevType: () => typeArr[typeArr.length - 1],
     ast: () => _tree,
   }
 

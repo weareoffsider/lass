@@ -2,7 +2,8 @@ const Lass = require('../index')
 
 test('Lots, while refactoring parser', () => {
   expect(Lass(
-`.class
+`
+.class
   &__something
     &::hover
       color red
@@ -15,10 +16,16 @@ test('Lots, while refactoring parser', () => {
 @link-color red // or a red // if purp not your thang
 @my-selector link
 
+@{myProperty} transform
+
 .classname
   property value
   font-size 8, 2, 4
   // ^ this ain't valid
+  transition
+    opacity 0.3s
+    transform 0.3s
+    color 0.3s
 
   &__el
     content "element"
@@ -76,8 +83,8 @@ h2
   @media screen and (min-width: @px)
     @rules()
 `
-)).toBe(
-`.class {
+)).toBe(`
+.class {
   &__something {
     &::hover {
       color: red;}}}
@@ -90,10 +97,16 @@ h2
 @link-color: red;
 @my-selector: link;
 
+@{myProperty}: transform;
+
 .classname {
   property: value;
   font-size: 8, 2, 4;
 
+  transition:
+    opacity 0.3s,
+    transform 0.3s,
+    color 0.3s;
 
   &__el {
     content: "element";
