@@ -6,6 +6,12 @@ const Lass = require('../index'); test('Lots, while refactoring parser', () => {
       opacity 0.3s
       transform 0.3s
       color 0.3s
+
+  h1,
+  .class,
+  &__sub
+    &::active,
+    &::focus,
     &::hover
       color red
       background
@@ -32,7 +38,13 @@ const Lass = require('../index'); test('Lots, while refactoring parser', () => {
     transition:
       opacity 0.3s,
       transform 0.3s,
-      color 0.3s;
+      color 0.3s;}
+
+  h1,
+  .class,
+  &__sub {
+    &::active,
+    &::focus,
     &::hover {
       color: red;
       background:

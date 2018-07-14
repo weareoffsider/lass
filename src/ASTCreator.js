@@ -5,9 +5,10 @@ module.exports = function () {
   let indent = 0
   let pointer = []
   let typeArr = []
-  // let commentLines = {}
   let emptyLines = []
-  //
+
+  // let prev = null
+  // let parent = null
 
   return {
     add,
@@ -21,6 +22,8 @@ module.exports = function () {
       return typeArr.slice(0, indent).includes(type)
       // The slice here makes sure we only look at a portion of the typeArr in the tree above the specified indent
     },
+    // prev: () => prev,
+    // parent: (indent) => { return getBranchAtPointer(pointer.slice(0, indent)) },
     prevType: () => typeArr[typeArr.length - 1],
     ast: () => _tree,
   }
@@ -60,6 +63,7 @@ module.exports = function () {
       comment: line.comment || '',
       children: [],
     }
+    // prev = _line
     if (branch === undefined) {
       console.log(line)
     }

@@ -12,6 +12,7 @@ function Lass (input = '') {
   const OBJECT_PROPERTY = "OBJECT_PROPERTY"
   const OBJECT_VALUE = "OBJECT_VALUE"
   const STATEMENT = "STATEMENT"
+  const MULTILINE_SELECTOR = "MULTILINE_SELECTOR"
   const MIXIN_STATEMENT = "MIXIN_STATEMENT"
   const RULE = "RULE"
   const MULTILINE_PROPERTY = "MULTILINE_PROPERTY"
@@ -62,6 +63,13 @@ function Lass (input = '') {
       }
     }
 
+
+    if (
+      next &&
+      next.indent === curr.indent &&
+      curr.content.endsWith(',')
+    )
+      return tree.add(curr, MULTILINE_SELECTOR)
 
     // Single line @ At rules (does not include media queries which are statements)
     if (isAtRule(curr.content)) {
