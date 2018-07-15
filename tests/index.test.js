@@ -4,6 +4,7 @@ const path = require('path')
 
 
 runtest('biteable.button')
+runtest('tlc.form')
 
 runtest('at-rules')
 runtest('many')

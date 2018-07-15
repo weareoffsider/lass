@@ -20,6 +20,7 @@ function Lass (input = '') {
   const MULTILINE_VALUE = "MULTILINE_VALUE"
   const MULTILINE_VALUE_COMMA = "MULTILINE_VALUE_COMMA"
   const ATRULE = "ATRULE"
+  const EXTEND = "EXTEND"
 
   // First pass splitting on new lines to create an array of objects representing each line
   // Preparse
@@ -65,6 +66,11 @@ function Lass (input = '') {
     }
 
 
+    if (isExtendRule(curr.content)) {
+      return tree.add(curr, EXTEND)
+    }
+
+
     if (
       next &&
       next.indent === curr.indent &&
@@ -79,44 +85,12 @@ function Lass (input = '') {
       // @TODO warn for indentation
     }
 
-
     if (tree.parentType(curr.indent) === MULTILINE_PROPERTY_COMMA) {
       return tree.add(curr, MULTILINE_VALUE_COMMA)
     }
     if (tree.parentType(curr.indent) === MULTILINE_PROPERTY) {
       return tree.add(curr, MULTILINE_VALUE)
     }
-
-
-    // if (
-    //   tree.prevType() === MULTILINE_PROPERTY ||
-    //   tree.prevType() === MULTILINE_VALUE
-    // ) {
-    //   if (
-    //     ! next ||
-    //     next.indent === curr.indent ||
-    //     next.indent < curr.indent
-    //   ) {
-    //     // console.log(curr.lineNum, curr.content)
-    //     return tree.add(curr, MULTILINE_VALUE)
-    //   }
-    // }
-
-
-    // if (
-    //   tree.parentType(curr.indent) ===
-    //   tree.prevType() === MULTILINE_PROPERTY_COMMA ||
-    //   tree.prevType() === MULTILINE_VALUE_COMMA
-    // ) {
-    //   if (
-    //     ! next ||
-    //     next.indent === curr.indent ||
-    //     next.indent < curr.indent
-    //   ) {
-    //     console.log(curr.lineNum, curr.content)
-    //     return tree.add(curr, MULTILINE_VALUE_COMMA)
-    //   }
-    // }
 
     // Statements
     // @media
@@ -191,6 +165,10 @@ function Lass (input = '') {
       }
     }
 
+    if (node.type === EXTEND) {
+      return _maybeNewLine + indentChars + node.content + ';'
+    }
+
     if (node.type === ATRULE) {
       return _maybeNewLine + indentChars + node.content + ';'
     }
@@ -254,6 +232,10 @@ function Lass (input = '') {
     if (str.startsWith('@import')) return true
     if (str.startsWith('@plugin')) return true
     return false
+  }
+
+  function isExtendRule (str) {
+    return str.includes(':extend')
   }
 
   function isObjectDefinition (str) {
