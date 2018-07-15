@@ -23,7 +23,11 @@ module.exports = function () {
       // The slice here makes sure we only look at a portion of the typeArr in the tree above the specified indent
     },
     // prev: () => prev,
-    // parent: (indent) => { return getBranchAtPointer(pointer.slice(0, indent)) },
+    parent: (indent) => { return getBranchAtPointer(pointer.slice(0, indent)) },
+    parentType: (indent) => {
+      const parent = getBranchAtPointer(pointer.slice(0, indent))
+      return parent.type ? parent.type : undefined
+    },
     prevType: () => typeArr[typeArr.length - 1],
     ast: () => _tree,
   }

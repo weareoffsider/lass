@@ -2,7 +2,7 @@ const stringToLineObjects = require('./src/stringToLineObjects')
 const ASTCreator = require('./src/ASTCreator')
 const cssProperties = require('./src/properties')
 const util = require('util')
-
+const LOG_TREE = false
 
 function Lass (input = '') {
   const NUM_INDENT_SPACES = 2
@@ -33,6 +33,7 @@ function Lass (input = '') {
   lineObjs.forEach((curr, i) => {
     const lineNum = i + 1
     const next = getNextMeaningful(lineObjs, i)
+
 
     // @TODO Catch indent greater than NUM_INDENT_SPACES
     // if (next.indent !== curr.indent + 1) {
@@ -68,8 +69,9 @@ function Lass (input = '') {
       next &&
       next.indent === curr.indent &&
       curr.content.endsWith(',')
-    )
+    ) {
       return tree.add(curr, MULTILINE_SELECTOR)
+    }
 
     // Single line @ At rules (does not include media queries which are statements)
     if (isAtRule(curr.content)) {
@@ -77,31 +79,44 @@ function Lass (input = '') {
       // @TODO warn for indentation
     }
 
-    if (
-      tree.prevType() === MULTILINE_PROPERTY ||
-      tree.prevType() === MULTILINE_VALUE
-    ) {
-      if (
-        ! next ||
-        next.indent === curr.indent ||
-        next.indent < curr.indent
-      ) {
-        return tree.add(curr, MULTILINE_VALUE)
-      }
+
+    if (tree.parentType(curr.indent) === MULTILINE_PROPERTY_COMMA) {
+      return tree.add(curr, MULTILINE_VALUE_COMMA)
+    }
+    if (tree.parentType(curr.indent) === MULTILINE_PROPERTY) {
+      return tree.add(curr, MULTILINE_VALUE)
     }
 
-    if (
-      tree.prevType() === MULTILINE_PROPERTY_COMMA ||
-      tree.prevType() === MULTILINE_VALUE_COMMA
-    ) {
-      if (
-        ! next ||
-        next.indent === curr.indent ||
-        next.indent < curr.indent
-      ) {
-        return tree.add(curr, MULTILINE_VALUE_COMMA)
-      }
-    }
+
+    // if (
+    //   tree.prevType() === MULTILINE_PROPERTY ||
+    //   tree.prevType() === MULTILINE_VALUE
+    // ) {
+    //   if (
+    //     ! next ||
+    //     next.indent === curr.indent ||
+    //     next.indent < curr.indent
+    //   ) {
+    //     // console.log(curr.lineNum, curr.content)
+    //     return tree.add(curr, MULTILINE_VALUE)
+    //   }
+    // }
+
+
+    // if (
+    //   tree.parentType(curr.indent) ===
+    //   tree.prevType() === MULTILINE_PROPERTY_COMMA ||
+    //   tree.prevType() === MULTILINE_VALUE_COMMA
+    // ) {
+    //   if (
+    //     ! next ||
+    //     next.indent === curr.indent ||
+    //     next.indent < curr.indent
+    //   ) {
+    //     console.log(curr.lineNum, curr.content)
+    //     return tree.add(curr, MULTILINE_VALUE_COMMA)
+    //   }
+    // }
 
     // Statements
     // @media
@@ -137,7 +152,7 @@ function Lass (input = '') {
     console.error(`Condition not met for ${curr.lineNum}`)
   })
 
-  // tree.log()
+  if (LOG_TREE) tree.log()
   const whitespaceLines = tree.emptyLines()
 
   return tree.ast()

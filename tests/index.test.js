@@ -3,6 +3,8 @@ const fs = require('fs')
 const path = require('path')
 
 
+runtest('biteable.button')
+
 runtest('at-rules')
 runtest('many')
 runtest('many-more')
