@@ -20,7 +20,7 @@ function runtest (name) {
   const lass = fs.readFileSync(path.resolve(__dirname, `./lass/${name}.lass`), 'utf8')
   // Jest
   test(name, () => {
-    expect(Lass(lass)).toBe(less);
+    expect(Lass.render(lass)).toBe(less);
   })
 }
 

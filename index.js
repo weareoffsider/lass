@@ -4,7 +4,12 @@ const cssProperties = require('./src/properties')
 const util = require('util')
 const LOG_TREE = false
 
-function Lass (input = '') {
+
+const Lass = {
+  render
+}
+
+function render (input = '') {
   const NUM_INDENT_SPACES = 2
 
   // Types
