@@ -16,9 +16,9 @@ function Lass (input = '') {
   const MIXIN_STATEMENT = "MIXIN_STATEMENT"
   const RULE = "RULE"
   const MULTILINE_PROPERTY = "MULTILINE_PROPERTY"
-  const MULTILINE_PROPERTY_COMMA = "MULTILINE_PROPERTY_COMMA"
+  // const MULTILINE_PROPERTY_COMMA = "MULTILINE_PROPERTY_COMMA"
   const MULTILINE_VALUE = "MULTILINE_VALUE"
-  const MULTILINE_VALUE_COMMA = "MULTILINE_VALUE_COMMA"
+  // const MULTILINE_VALUE_COMMA = "MULTILINE_VALUE_COMMA"
   const ATRULE = "ATRULE"
   const EXTEND = "EXTEND"
 
@@ -85,9 +85,9 @@ function Lass (input = '') {
       // @TODO warn for indentation
     }
 
-    if (tree.parentType(curr.indent) === MULTILINE_PROPERTY_COMMA) {
-      return tree.add(curr, MULTILINE_VALUE_COMMA)
-    }
+    // if (tree.parentType(curr.indent) === MULTILINE_PROPERTY_COMMA) {
+    //   return tree.add(curr, MULTILINE_VALUE_COMMA)
+    // }
     if (tree.parentType(curr.indent) === MULTILINE_PROPERTY) {
       return tree.add(curr, MULTILINE_VALUE)
     }
@@ -104,9 +104,9 @@ function Lass (input = '') {
     if (tree.includesType(STATEMENT)) {
       if (next && next.indent > curr.indent) {
         if (curr.prop && ! curr.val) {
-          if (cssProperties.commaSeparated.indexOf(curr.prop) !== -1) {
-            return tree.add(curr, MULTILINE_PROPERTY_COMMA)
-          }
+          // if (cssProperties.commaSeparated.indexOf(curr.prop) !== -1) {
+          //   return tree.add(curr, MULTILINE_PROPERTY_COMMA)
+          // }
           if (cssProperties.all.indexOf(curr.prop) !== -1) {
             return tree.add(curr, MULTILINE_PROPERTY)
           }
@@ -209,7 +209,7 @@ function Lass (input = '') {
       case MIXIN_STATEMENT:
         return [`, {`, `});`]
       case MULTILINE_PROPERTY:
-      case MULTILINE_PROPERTY_COMMA:
+      // case MULTILINE_PROPERTY_COMMA:
         return [`:`, `;`]
       default:
         return [``, ``]
@@ -220,7 +220,7 @@ function Lass (input = '') {
     switch (type) {
       case OBJECT_PROPERTY:
       case OBJECT_VALUE:
-      case MULTILINE_VALUE_COMMA:
+      // case MULTILINE_VALUE_COMMA:
         return ','
       default:
         return ''

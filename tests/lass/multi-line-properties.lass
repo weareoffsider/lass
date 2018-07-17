@@ -11,7 +11,7 @@
     // ^ There's no syntax to split this linear-gradient expression over multiple lines... yet
 
   transition // split properties over multiple lines
-    opacity 0.3s
+    opacity 0.3s,
     color 0.3s easeout
 
   // space separated works too

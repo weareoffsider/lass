@@ -18,8 +18,8 @@
   font-size 8, 2, 4
   // ^ this ain't valid
   transition
-    opacity 0.3s
-    transform 0.3s
+    opacity 0.3s,
+    transform 0.3s,
     color 0.3s
 
   &__el

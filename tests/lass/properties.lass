@@ -2,9 +2,13 @@
   &__something
     color red
     transition
-      opacity 0.3s
-      transform 0.3s
+      opacity 0.3s,
+      transform 0.3s,
       color 0.3s
+    background
+      red url(a.png) 0 0,
+      green url(b.png) 0 0,
+      blue url(c.png) 0 0
 
   h1,
   .class,
@@ -13,17 +17,15 @@
     &::focus,
     &::hover
       color red
-      background
-        url()
-        no-repeat
+      background url() no-repeat
 
 .classname
   property value
   font-size 8, 2, 4
   // ^ this ain't valid
   transition
-    opacity 0.3s
-    transform 0.3s
+    opacity 0.3s,
+    transform 0.3s,
     color 0.3s
 
   // @{myProperty} // not supported
