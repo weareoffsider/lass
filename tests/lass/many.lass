@@ -3,8 +3,8 @@
     &::hover
       color red
 
-@import "something"
-@import (importRule) "something"
+@import something
+@import (importRule) something
 
 // Comment
 @link-color #428bca // a nice purple

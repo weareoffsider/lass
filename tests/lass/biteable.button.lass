@@ -1,13 +1,13 @@
 // Dependencies
-@import "../../_/get"
-@import "../../_/resetInput"
-@import "../../_/fontInherit"
-@import "../../_/fontSmoothing"
-@import "../../config/palette"
-@import "../../typography"
+@import ../../_/get
+@import ../../_/resetInput
+@import ../../_/fontInherit
+@import ../../_/fontSmoothing
+@import ../../config/palette
+@import ../../typography
 
 // Sub-Components
-@import "../../atoms/Underline"
+@import ../../atoms/Underline
 
 
 @keyframes Button-pong

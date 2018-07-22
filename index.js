@@ -156,9 +156,7 @@ function render (input = '') {
 
     let content = node.content
 
-    // console.log(node.lineNum)
     const _maybeNewLine = maybeNewLine(node.lineNum)
-
 
     if (node.type === RULE) {
       // Not all rules have a prop and value, eg
@@ -175,7 +173,20 @@ function render (input = '') {
     }
 
     if (node.type === ATRULE) {
-      return _maybeNewLine + indentChars + node.content + ';'
+      if (node.prop === '@import') {
+        // Append .lass automatically if no file extension
+        if (
+          ! node.val.endsWith('.lass') &&
+          ! node.val.endsWith('.less') &&
+          ! node.val.endsWith('.css')
+        ) {
+          node.val = node.val + '.lass'
+        }
+      }
+      // Quote path: `@import (rule) something` --> `@import (rule) "something"
+      const path = node.val.split(" ").slice(-1)
+      node.val = node.val.replace(path, '"' + path + '"')
+      return _maybeNewLine + indentChars + node.prop + ' ' + node.val + ';'
     }
 
     const children = node.children.length
