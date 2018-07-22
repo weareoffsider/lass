@@ -1,162 +1,274 @@
-function Lass (input = '') {
+const stringToLineObjects = require('./src/stringToLineObjects')
+const ASTCreator = require('./src/ASTCreator')
+const cssProperties = require('./src/properties')
+const util = require('util')
+const LOG_TREE = false
+
+
+const Lass = {
+  render
+}
+
+function render (input = '') {
   const NUM_INDENT_SPACES = 2
-  const SPACE_CHAR = ' '
-  const COMMA_CHAR = ','
 
-  const lines = input.split('\n')
-  const linesLength = lines.length
-  const lineObjs = []
+  // Types
+  const OBJECT_DEFINITION = "OBJECT_DEFINITION"
+  const OBJECT_PROPERTY = "OBJECT_PROPERTY"
+  const OBJECT_VALUE = "OBJECT_VALUE"
+  const STATEMENT = "STATEMENT"
+  const MULTILINE_SELECTOR = "MULTILINE_SELECTOR"
+  const MIXIN_STATEMENT = "MIXIN_STATEMENT"
+  const RULE = "RULE"
+  const MULTILINE_PROPERTY = "MULTILINE_PROPERTY"
+  // const MULTILINE_PROPERTY_COMMA = "MULTILINE_PROPERTY_COMMA"
+  const MULTILINE_VALUE = "MULTILINE_VALUE"
+  // const MULTILINE_VALUE_COMMA = "MULTILINE_VALUE_COMMA"
+  const ATRULE = "ATRULE"
+  const EXTEND = "EXTEND"
 
-  // Do a first pass of all lines, splitting up indentation, content, and comments
-  for (let i = 0; i < linesLength; i++) {
-    const line = lines[i]
+  // First pass splitting on new lines to create an array of objects representing each line
+  // Preparse
+  const lineObjs = stringToLineObjects(input, { NUM_INDENT_SPACES })
+
+  // Create a Parse Tree
+  const tree = ASTCreator()
+
+  // Tokeniser
+  // Define what each line is (based on the relationship between lines) and add it to the Parse Tree
+  lineObjs.forEach((curr, i) => {
     const lineNum = i + 1
+    const next = getNextMeaningful(lineObjs, i)
 
-    const _leadingSpaces = leadingSpaces(line)
-    const indent = _leadingSpaces / NUM_INDENT_SPACES
-    if (_leadingSpaces % NUM_INDENT_SPACES) {
-      console.error(`Line ${lineNum} has invalid indentiation. Should be a multiple of ${NUM_INDENT_SPACES}.`)
+
+    // @TODO Catch indent greater than NUM_INDENT_SPACES
+    // if (next.indent !== curr.indent + 1) {
+    //   console.error(`Indentation error for line ${next.lineNum}`)
+    // }
+
+    // Comments and empty lines
+    if (! curr.content) {
+      return tree.addEmptyLine(lineNum)
+      // whitespaceLines.push(curr.lineNum)
+      // return // skip
     }
 
-    let [content, comment] = splitOnce(line.trim(), '//')
-    content = content.trim()
-    comment = comment.trim()
 
-    // console.log(lineNum, indent, content, comment)
-
-    lineObjs.push({
-      meaningful: content ? true : false,
-      lineNum,
-      indent,
-      content,
-      comment,
-    })
-  }
-
-  // console.log(lineObjs)
-
-  // Do a second pass to determine the relationship between lines
-  const indentStack = []
-  let multiLineExpression = false // COMMA_CHAR or SPACE_CHAR
-  const lineObjsLength = lineObjs.length
-  const out = []
-  for (let i = 0; i < lineObjsLength; i++) {
-    out.push((() => {
-      const curr = lineObjs[i]
-
-      if (!curr.content) {
-        return writeLine(curr)
-      }
-      else {
-        const next = getNextMeaningful(lineObjs, i)
-        if (! next || next.indent < curr.indent) {
-          // Curr is last in tip of branch
-          // Case for the very last line
-          curr.closingSymbol = ! next
-            ? popIndentStack(curr.indent)
-            : popIndentStack(curr.indent - next.indent)
-
-          if (multiLineExpression) {
-            multiLineExpression = false
-            curr.content = curr.content + ';'
-          } else {
-            // Only parse if we know it's not part of a multiLineExpression
-            curr.content = parseDeclaration(curr.content)
-          }
-          return writeLine(curr)
-        }
-        else if (next.indent === curr.indent) {
-          // No nesting follows
-          if (multiLineExpression) {
-            curr.content = (curr.content + multiLineExpression).trim()
-            return writeLine(curr)
-          }
-          else if (curr.content.endsWith(',')) {
-            // Multi/Group selector
-            return writeLine(curr)
-          }
-          else {
-            // Single line statements like @import,
-            // Property:value declarations, or
-            // Single line mixins
-            curr.content = parseDeclaration(curr.content)
-            return writeLine(curr)
-          }
-        }
-        else if (next.indent > curr.indent) {
-          // Children follow
-          // Catch indent greater than NUM_INDENT_SPACES
-          if (next.indent !== curr.indent + 1) {
-            console.error(`Indentation error for line ${next.lineNum}`)
-          }
-
-          if (curr.content.startsWith('+')) {
-            // remove starting '+' and trailing ')'
-            // @TODO handle id (#) mixins
-            curr.content = curr.content.replace('+', '.')
-            curr.content = curr.content.slice(0, -1) + ',' // remove trailing ')'
-            pushIndentStack(curr.lineNum, curr.indent, '});')
-            curr.openingSymbol = '{'
-          }
-          else if (curr.content.endsWith('[,]')) {
-            multiLineExpression = COMMA_CHAR
-            curr.content = curr.content.replace('[,]', '') + ':'
-            pushIndentStack(curr.lineNum, curr.indent, '')
-          }
-          else if (curr.content.endsWith('[ ]')) {
-            multiLineExpression = SPACE_CHAR
-            curr.content = curr.content.replace('[ ]', '') + ':'
-            pushIndentStack(curr.lineNum, curr.indent, '')
-          }
-          else {
-            pushIndentStack(curr.lineNum, curr.indent, '}')
-            curr.openingSymbol = '{'
-          }
-          return writeLine(curr)
-        }
-        else {
-          console.error(`Condition not met for ${curr.lineNum}`)
-        }
-      }
-    })())
-  } // for
-
-  // console.log(out.join('\n'))
-  return out.join('\n')
-
-  function writeLine (obj) {
-    const indentChars = '  '.repeat(obj.indent)
-    return indentChars +
-      obj.content +
-      (obj.openingSymbol
-        ? ' ' + obj.openingSymbol
-        : ''
-      ) +
-      (obj.closingSymbol
-        ? ' ' + obj.closingSymbol
-        : ''
-      ) +
-      (obj.content && obj.comment ? ' ' : '') +
-      (obj.comment
-        ? '// ' + obj.comment
-        : ''
-      )
-  }
-
-  function pushIndentStack (lineNum, indent, closingSymbol) {
-    indentStack.push({
-      lineNum,
-      indent,
-      closingSymbol,
-    })
-  }
-
-  function popIndentStack (indent) {
-    const closing = []
-    for (let i = 0; i < indent; i++) {
-      closing.push(indentStack.pop().closingSymbol)
+    // Object definitions
+    if (isObjectDefinition(curr.content)) {
+      return tree.add(curr, OBJECT_DEFINITION)
     }
-    return closing.join('')
+    if (tree.includesType(OBJECT_DEFINITION, curr.indent)) {
+      if (! next || next.indent < curr.indent) {
+        return tree.add(curr, OBJECT_VALUE)
+      }
+      if (next.indent === curr.indent) {
+        return tree.add(curr, OBJECT_VALUE)
+      }
+      if (next.indent > curr.indent) {
+        return tree.add(curr, OBJECT_PROPERTY)
+      }
+    }
+
+
+    if (isExtendRule(curr.content)) {
+      return tree.add(curr, EXTEND)
+    }
+
+
+    if (
+      next &&
+      next.indent === curr.indent &&
+      curr.content.endsWith(',')
+    ) {
+      return tree.add(curr, MULTILINE_SELECTOR)
+    }
+
+    // Single line @ At rules (does not include media queries which are statements)
+    if (isAtRule(curr.content)) {
+      return tree.add(curr, ATRULE)
+      // @TODO warn for indentation
+    }
+
+    // if (tree.parentType(curr.indent) === MULTILINE_PROPERTY_COMMA) {
+    //   return tree.add(curr, MULTILINE_VALUE_COMMA)
+    // }
+    if (tree.parentType(curr.indent) === MULTILINE_PROPERTY) {
+      return tree.add(curr, MULTILINE_VALUE)
+    }
+
+    // Statements
+    // @media
+    if (! next || next.indent < curr.indent) {
+      return tree.add(curr, RULE)
+    }
+    if (next.indent === curr.indent) {
+      return tree.add(curr, RULE)
+    }
+
+    if (tree.includesType(STATEMENT)) {
+      if (next && next.indent > curr.indent) {
+        if (curr.prop && ! curr.val) {
+          // if (cssProperties.commaSeparated.indexOf(curr.prop) !== -1) {
+          //   return tree.add(curr, MULTILINE_PROPERTY_COMMA)
+          // }
+          if (cssProperties.all.indexOf(curr.prop) !== -1) {
+            return tree.add(curr, MULTILINE_PROPERTY)
+          }
+        }
+      }
+    }
+
+    if (next.indent > curr.indent) {
+      if (isMixinWithRules(curr.content)) {
+        curr.content = transformMixinWithRules(curr.content)
+        return tree.add(curr, MIXIN_STATEMENT)
+      }
+
+      return tree.add(curr, STATEMENT)
+    }
+
+    console.error(`Condition not met for ${curr.lineNum}`)
+  })
+
+  if (LOG_TREE) tree.log()
+  const whitespaceLines = tree.emptyLines()
+
+  return tree.ast()
+    .map(iterateNodes)
+    .join(`\n`) + '\n'
+
+  function maybeNewLine (lineNum, count = 0) {
+    const front = whitespaceLines[0]
+    if (! front) return '\n'.repeat(count)
+    if (lineNum < front) return '\n'.repeat(count)
+
+    // Remove the first item from the array, and check for any additional empty lines
+    whitespaceLines.shift()
+    return maybeNewLine(lineNum, count + 1)
+  }
+
+  function iterateNodes (node, i, arr) {
+    const indentChars = `  `.repeat(node.indent)
+    const [ openTag, closeTag ] = symbols(node.type)
+    const isLastChild = i === arr.length - 1
+    const separatorChar = isLastChild ? '' : separator(node.type)
+
+    let content = node.content
+
+    const _maybeNewLine = maybeNewLine(node.lineNum)
+
+    if (node.type === RULE) {
+      // Not all rules have a prop and value, eg
+      // `.mymixin(#ffcc00)` or `@rules()`
+      if (node.val) {
+        content = `${node.prop}: ${node.val};`
+      } else {
+        content = `${node.prop};`
+      }
+    }
+
+    if (node.type === EXTEND) {
+      return _maybeNewLine + indentChars + node.content + ';'
+    }
+
+    if (node.type === ATRULE) {
+      if (node.prop === '@import') {
+        // Append .lass automatically if no file extension
+        if (
+          ! node.val.endsWith('.lass') &&
+          ! node.val.endsWith('.less') &&
+          ! node.val.endsWith('.css')
+        ) {
+          node.val = node.val + '.lass'
+        }
+      }
+      // Quote path: `@import (rule) something` --> `@import (rule) "something"
+      const path = node.val.split(" ").slice(-1)
+      node.val = node.val.replace(path, '"' + path + '"')
+      return _maybeNewLine + indentChars + node.prop + ' ' + node.val + ';'
+    }
+
+    const children = node.children.length
+      ? '\n' + node.children.map(iterateNodes).join('\n')
+      : ''
+
+    // We don't have a nice way of dealing with comments appearing *after* separator characters and closeTags, so we only show them when nodes have children and we can be sure not to have them end up in the wrong place.
+    const comment = node.comment
+      ? ` // ${node.comment} [${node.lineNum}]`
+      :` // [${node.lineNum}]`
+    const showComment = (node.type === ATRULE)// || children
+
+    return `` +
+      _maybeNewLine +
+      indentChars +
+      replaceObjectReference(content) +
+      openTag +
+      (! children ? separatorChar : '') +
+      children +
+      closeTag +
+      (children ? separatorChar : '') +
+      ''
+  }
+
+
+  function symbols (type) {
+    switch (type) {
+      case OBJECT_DEFINITION:
+        return [`: l(`, `);`]
+      case OBJECT_PROPERTY:
+        return [` l(`, `)`]
+      case OBJECT_VALUE:
+        return [``, ``]
+      case STATEMENT:
+        return [` {`, `}`]
+      case MIXIN_STATEMENT:
+        return [`, {`, `});`]
+      case MULTILINE_PROPERTY:
+      // case MULTILINE_PROPERTY_COMMA:
+        return [`:`, `;`]
+      default:
+        return [``, ``]
+    }
+  }
+
+  function separator (type) {
+    switch (type) {
+      case OBJECT_PROPERTY:
+      case OBJECT_VALUE:
+      // case MULTILINE_VALUE_COMMA:
+        return ','
+      default:
+        return ''
+    }
+  }
+
+
+  function isAtRule (str) {
+    if (str.startsWith('@import')) return true
+    if (str.startsWith('@plugin')) return true
+    return false
+  }
+
+  function isExtendRule (str) {
+    return str.includes(':extend')
+  }
+
+  function isObjectDefinition (str) {
+    // @palette
+    //   greenHaze #24c875
+    //   scienceBlue #003CE1
+    //   alabaster #f7f7f7
+    return str.match(/^@[a-zA-Z-\d]+$/)
+  }
+
+  function isMixinWithRules (str) {
+    return str.startsWith('+')
+  }
+
+  function transformMixinWithRules (str) {
+    // @TODO handle id (#) mixins
+    return '.' + str.slice(1, -1) // remove starting '+' and trailing ')'
   }
 
   function replaceObjectReference (str) {
@@ -172,33 +284,6 @@ function Lass (input = '') {
     })
   }
 
-  function parseDeclaration (content) {
-    if (content.startsWith('@import'))
-      return content + ';'
-
-    if (content.startsWith('@plugin'))
-      return content + ';'
-
-    let [prop, val] = splitOnce(content, ' ')
-    prop = prop.trim()
-    val = val.trim()
-
-    if (prop && val) {
-      prop = replaceObjectReference(prop)
-      val = replaceObjectReference(val)
-      return prop + ': ' + val + ';'
-    }
-
-    content = replaceObjectReference(content)
-    return content + ';'
-  }
-
-  function leadingSpaces (str) {
-    const match = str.match(/^\s+/)
-    return ! match
-      ? 0
-      : match[0].length
-  }
 
   function getNextMeaningful (arr, i) {
     let nextObj = arr[i + 1]
@@ -210,21 +295,6 @@ function Lass (input = '') {
 
     return getNextMeaningful(arr, i + 1)
   }
-}
-
-
-
-// Util
-
-function splitOnce (str, sep = '') {
-  const [first, ...rest] = str.split(sep)
-  return [first, rest.join(sep)]
-}
-
-function padStart (str, padString, length) {
-  while (str.length < length)
-    str = padString + str
-  return str
 }
 
 

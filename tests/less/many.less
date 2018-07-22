@@ -1,0 +1,79 @@
+.class {
+  &__something {
+    &::hover {
+      color: red;}}}
+
+@import "something.lass";
+@import (importRule) "something.lass";
+
+
+@link-color: #428bca;
+@link-color: red;
+@my-selector: link;
+
+@{myProperty}: transform;
+
+.classname {
+  property: value;
+  font-size: 8, 2, 4;
+
+  transition:
+    opacity 0.3s,
+    transform 0.3s,
+    color 0.3s;
+
+  &__el {
+    content: "element";
+    &::hover {
+      text-decoration: underline;}
+    color: red;}}
+
+h1 {
+  font-weight: bold;}
+
+h1, h2 {
+  font-size: big;}
+
+
+h2 {
+  font-size: big;}
+
+[disabled] {
+  opacity: 0.5;}
+
+
+.@{my-selector} {
+  font-weight: bold;
+  color: @link-color;
+  line-height: 40px;}
+
+#id {
+  for: you and me;
+
+  &::after {
+    content: '';}}
+
+
+
+.test() {
+  abc: 123;}
+
+.mixin(@color; @margin: 2) {
+  color-3: @color;
+  margin: @margin;}
+
+.some .selector div {
+  .mixin(#008000);
+
+
+  .from(768, {
+    color: red;
+
+    &:hover {
+      color: blue;}});}
+
+
+
+.from(@px, @rules) {
+  @media screen and (min-width: @px) {
+    @rules();}}

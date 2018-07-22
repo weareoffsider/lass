@@ -1,0 +1,116 @@
+
+@import "../../_/get.lass";
+@import "../../_/resetInput.lass";
+@import "../../_/fontInherit.lass";
+@import "../../_/fontSmoothing.lass";
+@import "../../config/palette.lass";
+@import "../../typography.lass";
+
+
+@import "../../atoms/Underline.lass";
+
+
+@keyframes Button-pong {
+  0% {
+    top: 5px;
+    transform: scaleY(1);}
+  80% {
+    top: calc(100% - 5px - 1em);
+    transform: scaleY(1.2);}
+  100% {
+    top: calc(100% - 5px - 1em);
+    transform: scaleY(0.8) scaleX(1.4);}}
+
+
+.Button {
+  .resetInput();
+  padding: 0;
+  background: transparent;
+  display: inline-block;
+  vertical-align: baseline;
+  background-color: at(@palette, brigadierBlueDark);
+  border-radius: 3px;
+
+  &__bd {
+    #Typography.button;
+    .fontSmoothing();
+    background-color: at(@palette, brigadierBlue);
+    color: #fff;
+    display: block;
+    position: relative;
+    border-radius: 3px;
+    padding-left: 1.3em;
+    padding-right: 1.3em;
+    position: relative;
+    transition: transform 0.2s;}
+
+
+
+
+  &__bd {
+    font-size: 16px;
+    line-height: 20px;
+    padding-top: 11px;
+    padding-bottom: 11px;}
+
+  &--large &__bd {
+    font-size: 20px;
+    line-height: 26px;
+    padding-top: 17px;
+    padding-bottom: 17px;}
+
+
+  &--small &__bd {
+    font-size: 12px;
+    line-height: 18px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    padding-left: 1em;
+    padding-right: 1em;}
+
+
+
+
+  &--white {
+    background-color: at(@palette, senatorSilver);}
+
+  &--white &__bd {
+    background-color: #fff;
+    color: at(@palette, body);}
+
+
+
+
+  &:hover &__bd,
+  &:focus &__bd {
+    transform: translateY(-4px);}
+
+  &:active &__bd {
+    transform: translateY(0);}
+
+  &.is-loading-setup &__bd::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: calc(50% - 0.5em);
+    width: 1em;
+    height: 1em;
+    border-radius: 100%;
+    background-color: currentColor;
+    transform-origin: 50% 100%;
+    animation:
+      Button-pong
+      0.6s
+      infinite
+      ease-in;
+    animation-direction: alternate;
+    transition: opacity 0.3s;
+    opacity: 0;
+    background:
+      red
+      no-repeat
+      center/80%
+      url("./image.png");}
+
+  &.is-loading &__bd::after {
+    opacity: 1;}}

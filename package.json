@@ -4,7 +4,11 @@
   "description": "Lass",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "cli": "./cli.js"
+  },
+  "bin": {
+    "lass": "./cli.js"
   },
   "repository": {
     "type": "git",
@@ -18,7 +22,11 @@
   "homepage": "https://github.com/weareoffsider/lass#readme",
   "devDependencies": {
     "jest": "23.1.0",
+    "known-css-properties": "0.6.1",
     "less": "3.0.4",
     "less-plugin-lists": "1.1.1"
+  },
+  "dependencies": {
+    "yargs": "^12.0.1"
   }
 }
