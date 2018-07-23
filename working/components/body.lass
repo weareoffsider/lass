@@ -1,6 +1,12 @@
 @import ../config/palette
 @import ../config/typography
+@import ../config/media.less
 @import (inline) ../other/vanilla.css
 
 body
   font-size @Typography.body.font-size
+
+  +from(768)
+    color red
+
+

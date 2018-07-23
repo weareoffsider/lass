@@ -24,11 +24,13 @@ const listsPlugin = new lessPluginLists()
 if (argv._ && argv._.length > 1) {
   const filein = argv._[0];
   const fileout = argv._[1];
-  const str = fs.readFileSync(path.resolve(__dirname, `${filein}`), 'utf8')
+  const inPath = path.resolve(__dirname, `${filein}`)
+  const str = fs.readFileSync(inPath, 'utf8')
 
   less
     .render(str, {
       plugins: [ lassPlugin, listsPlugin ],
+      filename: inPath,
       strictMath: true,
     })
     .then((out) => {

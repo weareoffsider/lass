@@ -1,3 +1,35 @@
+/* ---------------------------------------------------------------------------
+
+	Toolkit
+	=======
+
+	A handful of helper mixins for common patterns.
+
+--------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------
+
+	Toolkit: Media Queries
+	======================
+	@since 0.0.1
+
+
+	These mq abstractions don't overlap:
+
+	from( n ) { ... }
+		Styles elements from (and inclusive) of n.
+		Useful for adding complexity as viewport size increases.
+
+	to( n ) { ... }
+		Styles elements up to but not including n.
+		Effectively, max-width n-1
+		Useful for the occasional small screen only style.
+
+	n must be unitless CSS pixels; e.g., 768 or 1024
+	It gets converted to em.
+
+  Media Queries can be tagged with 'legacy' to be used in IE8 stylesheets.
+
+--------------------------------------------------------------------------- */
 .vanilla {
   width: 100px;
   height: 100px;
@@ -6,4 +38,9 @@
 
 body {
   font-size: 24px;
+}
+@media screen and (min-width: 48em) {
+  body {
+    color: red;
+  }
 }

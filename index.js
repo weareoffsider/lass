@@ -2,14 +2,30 @@ const stringToLineObjects = require('./src/stringToLineObjects')
 const ASTCreator = require('./src/ASTCreator')
 const cssProperties = require('./src/properties')
 const util = require('util')
+const path = require('path')
 const LOG_TREE = false
 
 
 const Lass = {
-  render
+  render,
+  plugin: {
+    priority: 1, // 1 = before import, 1000 = import, 2000 = after import
+    install: function(less, pluginManager) {
+      pluginManager.addPreProcessor({
+        process: render
+      }, this.priority);
+    }
+  },
 }
 
-function render (input = '') {
+function render (input = '', context = null) {
+  if (context && context.fileInfo) {
+    const ext = path.extname(context.fileInfo.filename)
+    if (ext !== '.lass') {
+      return input
+    }
+  }
+
   const NUM_INDENT_SPACES = 2
 
   // Types

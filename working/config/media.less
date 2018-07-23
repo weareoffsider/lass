@@ -1,0 +1,100 @@
+/* ---------------------------------------------------------------------------
+
+	Toolkit
+	=======
+
+	A handful of helper mixins for common patterns.
+
+--------------------------------------------------------------------------- */
+
+
+/* ---------------------------------------------------------------------------
+
+	Toolkit: Media Queries
+	======================
+	@since 0.0.1
+
+
+	These mq abstractions don't overlap:
+
+	from( n ) { ... }
+		Styles elements from (and inclusive) of n.
+		Useful for adding complexity as viewport size increases.
+
+	to( n ) { ... }
+		Styles elements up to but not including n.
+		Effectively, max-width n-1
+		Useful for the occasional small screen only style.
+
+	n must be unitless CSS pixels; e.g., 768 or 1024
+	It gets converted to em.
+
+  Media Queries can be tagged with 'legacy' to be used in IE8 stylesheets.
+
+--------------------------------------------------------------------------- */
+
+@ie8mode: false;
+
+// Inclusive of the value and above.
+.from-mq(@unitlessPx, @rules) {
+	@ems: unit( (@unitlessPx / 16), em);
+	@media screen and (min-width: @ems) {
+		@rules();
+	}
+}
+
+// Up to but not inclusive (1px less) the value:
+.to-mq(@unitlessPx, @rules) {
+	@ems: unit( ((@unitlessPx - 1 ) / 16 ), em);
+	@media screen and ( max-width: @ems ) {
+		@rules();
+	}
+}
+
+.from-to-mq(@from, @to, @rules) {
+	@fromEms: unit( (@from / 16), em);
+	@toEms: unit( (( @to - 1 ) / 16), em);
+	@media screen and (min-width: @fromEms) and (max-width: @toEms) {
+		@rules();
+	}
+}
+
+
+// mixins overloaded for legacy stylesheet (ie8)
+
+.from( @unitlessPx; @legacy; @rules) when (@ie8mode = false) {
+  .from-mq(@unitlessPx; @rules);
+}
+.from( @unitlessPx; @rules) when (@ie8mode = false) {
+  .from-mq(@unitlessPx; @rules);
+}
+
+// Up to but not inclusive (1px less) the value:
+.to( @unitlessPx; @legacy; @rules) when (@ie8mode = false) {
+  .to-mq(@unitlessPx; @rules);
+}
+.to( @unitlessPx; @rules) when (@ie8mode = false) {
+  .to-mq(@unitlessPx; @rules);
+}
+
+
+.from-to( @from; @to; @legacy; @rules) when (@ie8mode = false) {
+  .from-to-mq(@from; @to; @rules);
+}
+.from-to( @from; @to; @rules) when (@ie8mode = false) {
+  .from-to-mq(@from; @to; @rules);
+}
+
+
+// ie8 mode, render rules without query, but only if legacy
+.from( @unitlessPx; @legacy; @rules) when (@ie8mode = true) {
+	@rules();
+}
+
+.to( @unitlessPx; @legacy; @rules) when (@ie8mode = true) {
+	@rules();
+}
+
+.from-to( @unitlessPx; @legacy; @rules) when (@ie8mode = true) {
+	@rules();
+}

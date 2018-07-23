@@ -1,6 +1,6 @@
 {
-  "name": "lass",
-  "version": "1.0.0",
+  "name": "less-plugin-lass",
+  "version": "0.1.0",
   "description": "Lass",
   "main": "index.js",
   "scripts": {
