@@ -4,9 +4,7 @@
 @import (inline) ../other/vanilla.css
 
 body
-  font-size @Typography.body.font-size
+  font-size #Typography.body[font-size]
 
   +from(768)
     color red
-
-

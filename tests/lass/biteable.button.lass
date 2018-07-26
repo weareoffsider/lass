@@ -28,13 +28,13 @@
   background transparent
   display inline-block
   vertical-align baseline
-  background-color @palette.brigadierBlueDark
+  background-color @palette[brigadierBlueDark]
   border-radius 3px
 
   &__bd
     #Typography.button
     .fontSmoothing()
-    background-color @palette.brigadierBlue
+    background-color @palette[brigadierBlue]
     color #fff
     display block
     position relative
@@ -72,11 +72,11 @@
   // Colors
 
   &--white
-    background-color @palette.senatorSilver
+    background-color @palette[senatorSilver]
 
   &--white &__bd
     background-color #fff
-    color @palette.body
+    color @palette[body]
 
 
   // State

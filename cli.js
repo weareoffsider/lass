@@ -1,8 +1,7 @@
 #! /usr/bin/env node
 
-const lass = require('../index')
+const lass = require('./index')
 const less = require('less')
-const lessPluginLists = require('less-plugin-lists')
 
 const argv = require('yargs').argv
 const fs = require('fs')
@@ -18,8 +17,6 @@ const lassPlugin = {
   }
 }
 
-const listsPlugin = new lessPluginLists()
-
 
 if (argv._ && argv._.length > 1) {
   const filein = argv._[0];
@@ -29,7 +26,7 @@ if (argv._ && argv._.length > 1) {
 
   less
     .render(str, {
-      plugins: [ lassPlugin, listsPlugin ],
+      plugins: [ lassPlugin ],
       filename: inPath,
       strictMath: true,
     })

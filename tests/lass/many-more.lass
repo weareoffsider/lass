@@ -1,15 +1,6 @@
 @import something
 @import (importRule) something
 
-@Typography                 // OBJECT_DEFINITION
-  body                      // OBJECT_PROPERTY
-    font-size 22px          // OBJECT_VALUE
-    font-weight normal
-    line-height 1.3         // OBJECT_VALUE IS_LAST
-  h2
-    font-size 36px
-    font-weight bold
-
 // Class
 .class
   &__something

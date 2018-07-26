@@ -5,14 +5,13 @@ const path = require('path')
 
 runtest('biteable.button')
 runtest('tlc.form')
-
 runtest('at-rules')
 runtest('many')
 runtest('many-more')
 runtest('mixins-with-rules')
 runtest('multi-line-properties')
-runtest('plugin-lists-objects')
 runtest('properties')
+runtest('maps')
 
 
 function runtest (name) {
@@ -23,5 +22,3 @@ function runtest (name) {
     expect(Lass.render(lass)).toBe(less);
   })
 }
-
-

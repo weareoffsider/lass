@@ -29,19 +29,16 @@ function render (input = '', context = null) {
   const NUM_INDENT_SPACES = 2
 
   // Types
-  const OBJECT_DEFINITION = "OBJECT_DEFINITION"
-  const OBJECT_PROPERTY = "OBJECT_PROPERTY"
-  const OBJECT_VALUE = "OBJECT_VALUE"
+  const VARIABLE_MAP = "VARIABLE_MAP"
   const STATEMENT = "STATEMENT"
   const MULTILINE_SELECTOR = "MULTILINE_SELECTOR"
   const MIXIN_STATEMENT = "MIXIN_STATEMENT"
   const RULE = "RULE"
   const MULTILINE_PROPERTY = "MULTILINE_PROPERTY"
-  // const MULTILINE_PROPERTY_COMMA = "MULTILINE_PROPERTY_COMMA"
   const MULTILINE_VALUE = "MULTILINE_VALUE"
-  // const MULTILINE_VALUE_COMMA = "MULTILINE_VALUE_COMMA"
   const ATRULE = "ATRULE"
   const EXTEND = "EXTEND"
+  const EACH = "EACH"
 
   // First pass splitting on new lines to create an array of objects representing each line
   // Preparse
@@ -65,32 +62,16 @@ function render (input = '', context = null) {
     // Comments and empty lines
     if (! curr.content) {
       return tree.addEmptyLine(lineNum)
-      // whitespaceLines.push(curr.lineNum)
-      // return // skip
     }
-
 
     // Object definitions
-    if (isObjectDefinition(curr.content)) {
-      return tree.add(curr, OBJECT_DEFINITION)
+    if (isVariableMapDefinition(curr.content)) {
+      return tree.add(curr, VARIABLE_MAP)
     }
-    if (tree.includesType(OBJECT_DEFINITION, curr.indent)) {
-      if (! next || next.indent < curr.indent) {
-        return tree.add(curr, OBJECT_VALUE)
-      }
-      if (next.indent === curr.indent) {
-        return tree.add(curr, OBJECT_VALUE)
-      }
-      if (next.indent > curr.indent) {
-        return tree.add(curr, OBJECT_PROPERTY)
-      }
-    }
-
 
     if (isExtendRule(curr.content)) {
       return tree.add(curr, EXTEND)
     }
-
 
     if (
       next &&
@@ -106,9 +87,6 @@ function render (input = '', context = null) {
       // @TODO warn for indentation
     }
 
-    // if (tree.parentType(curr.indent) === MULTILINE_PROPERTY_COMMA) {
-    //   return tree.add(curr, MULTILINE_VALUE_COMMA)
-    // }
     if (tree.parentType(curr.indent) === MULTILINE_PROPERTY) {
       return tree.add(curr, MULTILINE_VALUE)
     }
@@ -125,9 +103,6 @@ function render (input = '', context = null) {
     if (tree.includesType(STATEMENT)) {
       if (next && next.indent > curr.indent) {
         if (curr.prop && ! curr.val) {
-          // if (cssProperties.commaSeparated.indexOf(curr.prop) !== -1) {
-          //   return tree.add(curr, MULTILINE_PROPERTY_COMMA)
-          // }
           if (cssProperties.all.indexOf(curr.prop) !== -1) {
             return tree.add(curr, MULTILINE_PROPERTY)
           }
@@ -139,6 +114,11 @@ function render (input = '', context = null) {
       if (isMixinWithRules(curr.content)) {
         curr.content = transformMixinWithRules(curr.content)
         return tree.add(curr, MIXIN_STATEMENT)
+      }
+
+      if (isEachFunction(curr.content)) {
+        curr.content = transformEachFunction(curr.content)
+        return tree.add(curr, EACH)
       }
 
       return tree.add(curr, STATEMENT)
@@ -168,7 +148,6 @@ function render (input = '', context = null) {
     const indentChars = `  `.repeat(node.indent)
     const [ openTag, closeTag ] = symbols(node.type)
     const isLastChild = i === arr.length - 1
-    const separatorChar = isLastChild ? '' : separator(node.type)
 
     let content = node.content
 
@@ -218,47 +197,28 @@ function render (input = '', context = null) {
     return `` +
       _maybeNewLine +
       indentChars +
-      replaceObjectReference(content) +
+      content +
       openTag +
-      (! children ? separatorChar : '') +
       children +
-      closeTag +
-      (children ? separatorChar : '') +
-      ''
+      closeTag
   }
 
 
   function symbols (type) {
     switch (type) {
-      case OBJECT_DEFINITION:
-        return [`: l(`, `);`]
-      case OBJECT_PROPERTY:
-        return [` l(`, `)`]
-      case OBJECT_VALUE:
-        return [``, ``]
+      case VARIABLE_MAP:
+        return [`: {`, `}`]
       case STATEMENT:
         return [` {`, `}`]
       case MIXIN_STATEMENT:
+      case EACH:
         return [`, {`, `});`]
       case MULTILINE_PROPERTY:
-      // case MULTILINE_PROPERTY_COMMA:
         return [`:`, `;`]
       default:
         return [``, ``]
     }
   }
-
-  function separator (type) {
-    switch (type) {
-      case OBJECT_PROPERTY:
-      case OBJECT_VALUE:
-      // case MULTILINE_VALUE_COMMA:
-        return ','
-      default:
-        return ''
-    }
-  }
-
 
   function isAtRule (str) {
     if (str.startsWith('@import')) return true
@@ -270,7 +230,7 @@ function render (input = '', context = null) {
     return str.includes(':extend')
   }
 
-  function isObjectDefinition (str) {
+  function isVariableMapDefinition (str) {
     // @palette
     //   greenHaze #24c875
     //   scienceBlue #003CE1
@@ -282,24 +242,18 @@ function render (input = '', context = null) {
     return str.startsWith('+')
   }
 
+  function isEachFunction (str) {
+    return str.startsWith('each(')
+  }
+
   function transformMixinWithRules (str) {
     // @TODO handle id (#) mixins
     return '.' + str.slice(1, -1) // remove starting '+' and trailing ')'
   }
 
-  function replaceObjectReference (str) {
-    // `@Typography.body.font-size` -> `at(at(@Typography, body), font-weight)`
-    return str.replace(/(@[a-zA-Z-\d]+\.[a-zA-Z-\d.]+)/g, (match) => {
-      // https://regex101.com/r/LnGhNw/1
-      return match
-        .split('.')
-        .reduce((acc, x, i) => {
-          if (i === 0) return x // @Typography
-          return `at(${acc}, ${x})` // at(@Typography, body)
-        }, '')
-    })
+  function transformEachFunction (str) {
+    return str.slice(0, -1) // remove trailing ')'
   }
-
 
   function getNextMeaningful (arr, i) {
     let nextObj = arr[i + 1]

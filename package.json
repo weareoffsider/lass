@@ -23,8 +23,7 @@
   "devDependencies": {
     "jest": "23.1.0",
     "known-css-properties": "0.6.1",
-    "less": "3.0.4",
-    "less-plugin-lists": "1.1.1"
+    "less": "3.8.0"
   },
   "dependencies": {
     "yargs": "^12.0.1"
